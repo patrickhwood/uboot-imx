@@ -3409,6 +3409,9 @@ mx6sl_evk_iram_config	: unconfig
 		}
 	@$(MKCONFIG) $(@:_config=) arm arm_cortexa8 mx6sl_evk freescale mx6
 
+mx6q_jupiter_config: unconfig
+	 @$(MKCONFIG) $(@:_config=) arm arm_cortexa8 mx6q_jupiter freescale mx6
+
 omap2420h4_config	: unconfig
 	@$(MKCONFIG) $(@:_config=) arm arm1136 omap2420h4 NULL omap24xx
 
