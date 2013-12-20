@@ -62,6 +62,7 @@ static enum boot_device boot_dev;
 #define FEC_RMII_RST 	IMX_GPIO_NR(3, 31)
 #define FEC_RMII_INT 	IMX_GPIO_NR(3, 30)
 #define FEC_RMII_LED1 	IMX_GPIO_NR(3, 23)
+#define GPIO_VOL_DN_KEY IMX_GPIO_NR(4, 10)
 #define GPIO_I2C2_SCL 	IMX_GPIO_NR(4, 12)
 #define GPIO_I2C2_SDA 	IMX_GPIO_NR(4, 13)
 #define GPIO_I2C3_SCL 	IMX_GPIO_NR(1, 3)
@@ -635,6 +636,19 @@ int checkboard(void)
 #ifdef CONFIG_ANDROID_RECOVERY
 int check_recovery_cmd_file(void)
 {
-	return check_and_clean_recovery_flag();
+	int recovery_key = 0;
+	int recovery_mode = 0;
+
+	recovery_mode = check_recovery_cmd_file();
+	/* check recovery key pressed */
+	mxc_iomux_v3_setup_pad(MX6Q_PAD_KEY_COL2__GPIO_4_10);
+	gpio_direction_input(GPIO_VOL_DN_KEY);
+
+	if (gpio_get_value(GPIO_VOL_DN_KEY) == 0) {
+		recovery_key = 1;
+		printf("Recovery key pressed\n");
+	}
+
+	return recovery_mode || recovery_key;
 }
 #endif
