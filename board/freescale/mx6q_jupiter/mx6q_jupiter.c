@@ -144,6 +144,7 @@ int board_eth_init(bd_t *bis)
 #ifdef CONFIG_CMD_MMC
 struct fsl_esdhc_cfg usdhc_cfg[1] = {
 	{USDHC1_BASE_ADDR, 1, 1, 1, 1},
+	{USDHC4_BASE_ADDR, 1, 1, 1, 0},
 };
 
 iomux_v3_cfg_t usdhc1_pads[] = {
@@ -157,14 +158,31 @@ iomux_v3_cfg_t usdhc1_pads[] = {
 	MX6Q_PAD_KEY_COL1__USDHC1_VSELECT,
 };
 
+iomux_v3_cfg_t usdhc4_pads[] = {
+	MX6Q_PAD_SD4_DAT0__USDHC4_CLK,
+	MX6Q_PAD_SD4_DAT0__USDHC4_CMD,
+	MX6Q_PAD_SD4_DAT0__USDHC4_DAT0,
+	MX6Q_PAD_SD4_DAT0__USDHC4_DAT1,
+	MX6Q_PAD_SD4_DAT0__USDHC4_DAT2,
+	MX6Q_PAD_SD4_DAT0__USDHC4_DAT3,
+	MX6Q_PAD_SD4_DAT0__USDHC4_DAT4,
+	MX6Q_PAD_SD4_DAT0__USDHC4_DAT5,
+	MX6Q_PAD_SD4_DAT0__USDHC4_DAT6,
+	MX6Q_PAD_SD4_DAT0__USDHC4_DAT7,
+	MX6Q_PAD_NANDF_ALE__USDHC4_RST,
+};
+
 int usdhc_gpio_init(bd_t *bis)
 {
 	s32 status = 0;
 
 	mxc_iomux_v3_setup_multiple_pads(usdhc1_pads,
 		ARRAY_SIZE(usdhc1_pads));
+	mxc_iomux_v3_setup_multiple_pads(usdhc4_pads,
+		ARRAY_SIZE(usdhc4_pads));
 
 	status |= fsl_esdhc_initialize(bis, &usdhc_cfg[1]);
+	status |= fsl_esdhc_initialize(bis, &usdhc_cfg[2]);
 
 	return status;
 }
