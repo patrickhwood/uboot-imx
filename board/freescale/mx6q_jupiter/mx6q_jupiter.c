@@ -129,8 +129,8 @@ int dram_init(void)
 
 static void setup_uart(void)
 {
-	mxc_iomux_v3_setup_pad(MX6Q_PAD_KEY_COL0__UART4_TXD);
-	mxc_iomux_v3_setup_pad(MX6Q_PAD_KEY_ROW0__UART4_RXD);
+	mxc_iomux_v3_setup_pad(MX6Q_PAD_SD3_DAT7__UART1_TXD);
+	mxc_iomux_v3_setup_pad(MX6Q_PAD_SD3_DAT6__UART1_RXD);
 }
 
 #ifdef CONFIG_NET_MULTI
