@@ -143,7 +143,7 @@ int board_eth_init(bd_t *bis)
 #endif
 
 #ifdef CONFIG_CMD_MMC
-struct fsl_esdhc_cfg usdhc_cfg[1] = {
+struct fsl_esdhc_cfg usdhc_cfg[2] = {
 	{USDHC1_BASE_ADDR, 1, 1, 1, 1},
 	{USDHC4_BASE_ADDR, 1, 1, 1, 0},
 };
