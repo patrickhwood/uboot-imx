@@ -37,6 +37,11 @@
 #include <miiphy.h>
 #endif
 
+#ifdef CONFIG_ARCH_MMU
+#include <asm/mmu.h>
+#include <asm/arch/mmu.h>
+#endif
+
 #ifdef CONFIG_CMD_MMC
 #include <mmc.h>
 #include <fsl_esdhc.h>
@@ -118,6 +123,56 @@ u32 get_board_rev(void)
 {
 	return fsl_system_rev;
 }
+
+#ifdef CONFIG_ARCH_MMU
+void board_mmu_init(void)
+{
+	unsigned long ttb_base = PHYS_SDRAM_1 + 0x4000;
+	unsigned long i;
+
+	/*
+	* Set the TTB register
+	*/
+	asm volatile ("mcr  p15,0,%0,c2,c0,0" : : "r"(ttb_base) /*:*/);
+
+	/*
+	* Set the Domain Access Control Register
+	*/
+	i = ARM_ACCESS_DACR_DEFAULT;
+	asm volatile ("mcr  p15,0,%0,c3,c0,0" : : "r"(i) /*:*/);
+
+	/*
+	* First clear all TT entries - ie Set them to Faulting
+	*/
+	memset((void *)ttb_base, 0, ARM_FIRST_LEVEL_PAGE_TABLE_SIZE);
+	/* Actual   Virtual  Size   Attributes          Function */
+	/* Base     Base     MB     cached? buffered?  access permissions */
+	/* xxx00000 xxx00000 */
+	X_ARM_MMU_SECTION(0x000, 0x000, 0x001,
+			ARM_UNCACHEABLE, ARM_UNBUFFERABLE,
+			ARM_ACCESS_PERM_RW_RW); /* ROM, 1M */
+	X_ARM_MMU_SECTION(0x001, 0x001, 0x008,
+			ARM_UNCACHEABLE, ARM_UNBUFFERABLE,
+			ARM_ACCESS_PERM_RW_RW); /* 8M */
+	X_ARM_MMU_SECTION(0x009, 0x009, 0x001,
+			ARM_UNCACHEABLE, ARM_UNBUFFERABLE,
+			ARM_ACCESS_PERM_RW_RW); /* IRAM */
+	X_ARM_MMU_SECTION(0x00A, 0x00A, 0x0F6,
+			ARM_UNCACHEABLE, ARM_UNBUFFERABLE,
+			ARM_ACCESS_PERM_RW_RW); /* 246M */
+	/* 1 GB memory starting at 0x10000000, only map 0.875 GB */
+	X_ARM_MMU_SECTION(0x100, 0x100, 0x380,
+			ARM_CACHEABLE, ARM_BUFFERABLE,
+			ARM_ACCESS_PERM_RW_RW);
+	/* uncached alias of the same 0.875 GB memory */
+	X_ARM_MMU_SECTION(0x100, 0x880, 0x380,
+			ARM_UNCACHEABLE, ARM_UNBUFFERABLE,
+			ARM_ACCESS_PERM_RW_RW);
+
+	/* Enable MMU */
+	MMU_ON();
+}
+#endif
 
 int dram_init(void)
 {
