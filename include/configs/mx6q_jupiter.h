@@ -30,8 +30,6 @@
 #define CONFIG_MXC
 #define CONFIG_MX6Q
 #define CONFIG_MX6Q_LPDDR2
-#define CONFIG_MX6Q_JUPITER
-#define CONFIG_DDR_32BIT /* For 32bit DDR, comment it out for 64bit */
 #define CONFIG_FLASH_HEADER
 #define CONFIG_FLASH_HEADER_OFFSET 0x400
 #define CONFIG_MX6_CLK32	   32768
@@ -41,8 +39,6 @@
 #define CONFIG_ARCH_CPU_INIT
 #undef CONFIG_ARCH_MMU /* disable MMU first */
 #define CONFIG_L2_OFF  /* disable L2 cache first*/
-
-#define CONFIG_FLASH_PLUG_IN /*Necessary to enable 2-channel mode*/
 
 #define CONFIG_MX6_HCLK_FREQ	24000000
 
@@ -190,9 +186,9 @@
 #ifdef CONFIG_CMD_I2C
 	#define CONFIG_HARD_I2C         1
 	#define CONFIG_I2C_MXC          1
-	#define CONFIG_SYS_I2C_BUS 		2
-	#define CONFIG_SYS_I2C_PORT    	I2C3_BASE_ADDR
-	#define CONFIG_SYS_I2C_SPEED 	100000
+	#define CONFIG_SYS_I2C_BUS	2
+	#define CONFIG_SYS_I2C_PORT	I2C3_BASE_ADDR
+	#define CONFIG_SYS_I2C_SPEED	100000
 	#define CONFIG_SYS_I2C_SLAVE    0x1f
 #endif
 
@@ -229,14 +225,11 @@
 /*-----------------------------------------------------------------------
  * Physical Memory Map
  */
-#define CONFIG_NR_DRAM_BANKS	2
+#define CONFIG_NR_DRAM_BANKS	1
 #define PHYS_SDRAM_1		CSD0_DDR_BASE_ADDR
 #define PHYS_SDRAM_1_SIZE	(256 * 1024 * 1024)
-#define PHYS_SDRAM_2		CSD1_DDR_BASE_ADDR
-#define PHYS_SDRAM_2_SIZE	(256 * 1024 * 1024)
 #define iomem_valid_addr(addr, size) \
- ((addr >= PHYS_SDRAM_1 && addr <= (PHYS_SDRAM_1 + PHYS_SDRAM_1_SIZE)) || \
- (addr >= PHYS_SDRAM_2 && addr <= (PHYS_SDRAM_2 + PHYS_SDRAM_2_SIZE)))
+ ((addr >= PHYS_SDRAM_1 && addr <= (PHYS_SDRAM_1 + PHYS_SDRAM_1_SIZE))
 
 #define IRAM_FREE_START		0x00907000
 /*-----------------------------------------------------------------------
