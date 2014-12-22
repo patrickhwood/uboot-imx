@@ -75,6 +75,7 @@
 #define CONFIG_INITRD_TAG
 #define	CONFIG_EXTRA_ENV_SETTINGS					\
 		"netdev=eth0\0"						\
+		"fastboot_dev=mmc2\0"					\
 		"ethprime=FEC0\0"					\
 		"splashimage=0x30000000\0"				\
 		"splashpos=m,m\0"					\
