@@ -3329,6 +3329,7 @@ mx6solo_sabresd_android_config             \
 mx6dl_sabresd_config			\
 mx6dl_sabresd_mfg_config		\
 mx6dl_sabresd_android_config			\
+mx6dl_uib_android_config			\
 mx6q_sabresd_config			\
 mx6q_sabresd_android_config             \
 mx6q_sabresd_mfg_config			\
@@ -3360,6 +3361,7 @@ mx6q_hdmidongle_nand_mfg_config   : unconfig
 
 mx6q_sabreauto_android_config		\
 mx6q_sabreauto_nand_android_config		\
+mx6dl_sabreauto_android_config		\
 mx6dl_sabreauto_android_config		\
 mx6dl_sabreauto_nand_android_config		\
 mx6solo_sabreauto_android_config		\
