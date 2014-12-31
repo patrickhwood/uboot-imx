@@ -51,6 +51,16 @@
 /* which mmc bus is your main storage ? */
 #define CONFIG_ANDROID_MAIN_MMC_BUS 1
 
+#undef CONFIG_SYS_FSL_USDHC_NUM
+#define CONFIG_SYS_FSL_USDHC_NUM 3
+
+#undef CONFIG_DYNAMIC_MMC_DEVNO
+#undef CONFIG_SYS_MMC_ENV_DEV
+#define CONFIG_SYS_MMC_ENV_DEV 1
+
+#undef CONFIG_MMC_8BIT_PORTS
+#define CONFIG_MMC_8BIT_PORTS 0x8
+
 #define CONFIG_ANDROID_BOOT_PARTITION_MMC 1
 #define CONFIG_ANDROID_SYSTEM_PARTITION_MMC 5
 #define CONFIG_ANDROID_RECOVERY_PARTITION_MMC 2
@@ -74,11 +84,29 @@
 #define CONFIG_RD_LOADADDR      0x11000000
 
 #define CONFIG_INITRD_TAG
-#define	CONFIG_EXTRA_ENV_SETTINGS					\
-		"netdev=eth0\0"						\
-		"fastboot_dev=mmc1\0"					\
-		"ethprime=FEC0\0"					\
-		"splashimage=0x30000000\0"				\
-		"splashpos=m,m\0"					\
-		"lvds_num=1\0"
+#define	CONFIG_EXTRA_ENV_SETTINGS											\
+		"netdev=eth0\0"														\
+		"ethprime=FEC0\0"													\
+		"uboot=u-boot.bin\0"												\
+		"kernel=uImage\0"													\
+		"nfsroot=/opt/eldk/arm\0"											\
+		"bootargs_base=setenv bootargs console=ttymxc0,115200 init=/init "	\
+		"video=mxcfb0:dev=ldb,bpp=32 video=mxcfb1:off video=mxcfb2:off fbmem=10M " \
+		"fb0base=0x27b00000 vmalloc=400M androidboot.console=ttymxc0 "		\
+		"androidboot.hardware=freescale androidboot.serialno=0a01234567890abc\0" \
+		"bootargs_nfs=setenv bootargs ${bootargs} root=/dev/nfs "			\
+			"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0"				\
+		"bootcmd_net=run bootargs_base bootargs_nfs; "						\
+			"tftpboot ${loadaddr} ${kernel}; bootm\0"						\
+		"bootargs_mmc=setenv bootargs ${bootargs} root=/dev/ram0\0"			\
+		"bootcmd_mmc=run bootargs_base bootargs_mmc; "   					\
+		"mmc dev 1; "														\
+		"booti mmc1\0"														\
+		"bootcmd=run bootcmd_mmc\0"                             			\
+		"fastboot_dev=mmc1\0"												\
+		"splashimage=0x30000000\0"											\
+		"splashpos=m,m\0"													\
+		"lvds_num=1\0"														\
+
+
 #endif
