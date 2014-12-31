@@ -245,7 +245,7 @@
 /*
  * GPMI Nand Configs
  */
-/* #define CONFIG_CMD_NAND */
+#define CONFIG_CMD_NAND
 
 #ifdef CONFIG_CMD_NAND
 	#define CONFIG_NAND_GPMI
@@ -257,7 +257,7 @@
 
 	#define NAND_MAX_CHIPS		8
 	#define CONFIG_SYS_NAND_BASE		0x40000000
-	#define CONFIG_SYS_MAX_NAND_DEVICE	1
+	#define CONFIG_SYS_MAX_NAND_DEVICE	2
 
 	/* NAND is the unique module invoke APBH-DMA */
 	#define CONFIG_APBH_DMA
