@@ -245,7 +245,7 @@
 /*
  * GPMI Nand Configs
  */
-#define CONFIG_CMD_NAND
+/* #define CONFIG_CMD_NAND */
 
 #ifdef CONFIG_CMD_NAND
 	#define CONFIG_NAND_GPMI
