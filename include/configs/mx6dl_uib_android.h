@@ -120,7 +120,7 @@
 			"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0"				\
 		"bootcmd_net=run bootargs_base bootargs_nfs; "						\
 			"tftpboot ${loadaddr} ${kernel}; bootm\0"						\
-		"bootargs_mmc=setenv bootargs ${bootargs} root=/dev/ram0\0"			\
+		"bootargs_mmc=setenv bootargs ${bootargs}\0"			\
 		"bootcmd_mmc=run bootargs_base bootargs_mmc; "   					\
 		"mmc dev 1; "														\
 		"booti mmc1\0"														\
