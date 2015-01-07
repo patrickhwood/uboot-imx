@@ -25,6 +25,14 @@
 #include <asm/arch/mx6.h>
 #include "mx6dl_sabresd.h"
 
+#ifdef CONFIG_CMD_I2C
+	#undef CONFIG_SYS_I2C_PORT
+	#define CONFIG_SYS_I2C_PORT             I2C2_BASE_ADDR
+	#undef CONFIG_SYS_I2C_SLAVE
+	#define CONFIG_SYS_I2C_SLAVE            0x0
+#endif
+
+
 #define CONFIG_MX6DL_UIB
 #define CONFIG_USB_DEVICE
 #define CONFIG_IMX_UDC		       1
@@ -128,7 +136,7 @@
 		"fastboot_dev=mmc1\0"												\
 		"splashimage=0x30000000\0"											\
 		"splashpos=m,m\0"													\
-		"lvds_num=1\0"														\
+		"lvds_num=0\0"														\
 
 
 #endif

@@ -95,6 +95,17 @@ static enum boot_device boot_dev;
 #define USB_OTG_PWR IMX_GPIO_NR(3, 22)
 #define USB_H1_POWER IMX_GPIO_NR(1, 29)
 
+#ifdef CONFIG_MX6DL_UIB
+#define TOUCH_RST_N IMX_GPIO_NR(3, 24)
+#define LVDS0_EN IMX_GPIO_NR(7, 12)
+#define LVDS0_AVDD_PG_N IMX_GPIO_NR(3, 19)
+#define LCD_CNTRL_VGH IMX_GPIO_NR(2, 10)
+
+#define EXT_LED1 IMX_GPIO_NR(1, 5)
+#define EXT_LED2 IMX_GPIO_NR(1, 7)
+#define EXT_LED3 IMX_GPIO_NR(1, 8)
+#endif /* CONFIG_MX6DL_UIB */
+
 extern int sata_curr_device;
 
 #ifdef CONFIG_VIDEO_MX5
@@ -385,6 +396,7 @@ static void setup_uart(void)
 #ifdef CONFIG_VIDEO_MX5
 void setup_lvds_poweron(void)
 {
+#ifndef CONFIG_MX6DL_UIB
 	int reg;
 	/* AUX_5V_EN: GPIO(6, 10) */
 #ifdef CONFIG_MX6DL
@@ -400,6 +412,7 @@ void setup_lvds_poweron(void)
 	reg = readl(GPIO6_BASE_ADDR + GPIO_DR);
 	reg |= (1 << 10);
 	writel(reg, GPIO6_BASE_ADDR + GPIO_DR);
+#endif /* !CONFIG_MX6DL_UIB */
 }
 #endif
 
@@ -471,6 +484,16 @@ static void setup_i2c(unsigned int module_base)
 		/* GPIO_6 for I2C3_SDA */
 		mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_6__I2C3_SDA);
 #endif
+
+#ifdef CONFIG_MX6DL_UIB
+		printf("reset touch panel\n");
+		/* reset UIB touch panel */
+		mxc_iomux_v3_setup_pad(MX6DL_PAD_EIM_D24__GPIO_3_24);
+		gpio_direction_output(TOUCH_RST_N, 0);
+		__udelay(100000);
+		gpio_direction_output(TOUCH_RST_N, 1);
+#endif
+
 		/* Enable i2c clock */
 		reg = readl(CCM_BASE_ADDR + CLKCTL_CCGR2);
 		reg |= 0xC00;
@@ -1123,6 +1146,13 @@ int board_mmc_io_switch(u32 index, u32 clock)
 	u32 count;
 	iomux_v3_cfg_t pad_ctrl = USDHC_PAD_CTRL_DEFAULT;
 
+	if (index >= CONFIG_SYS_FSL_USDHC_NUM) {
+		printf("Warning: you configured more USDHC controllers"
+			"(%d) than supported by the board (%d)\n",
+			index+1, CONFIG_SYS_FSL_USDHC_NUM);
+		return -1;
+	}
+
 	if (clock >= 200000000)
 		pad_ctrl = USDHC_PAD_CTRL_200MHZ;
 	else if (clock == 100000000)
@@ -1506,6 +1536,7 @@ void lcd_enable(void)
 
 	s = getenv("lvds_num");
 	di = simple_strtol(s, NULL, 10);
+	printf("lvds num = %d\n", di);
 
 	/*
 	* hw_rev 2: IPUV3DEX
@@ -1514,7 +1545,7 @@ void lcd_enable(void)
 	*/
 	g_ipu_hw_rev = IPUV3_HW_REV_IPUV3H;
 
-	imx_pwm_config(pwm0, 25000, 50000);
+	imx_pwm_config(pwm0, 50000, 50000);
 	imx_pwm_enable(pwm0);
 
 #if defined CONFIG_MX6Q
@@ -1525,13 +1556,44 @@ void lcd_enable(void)
 	/* LVDS panel CABC_EN1 */
 	mxc_iomux_v3_setup_pad(MX6Q_PAD_NANDF_CS3__GPIO_6_16);
 #elif defined CONFIG_MX6DL
+#ifdef CONFIG_MX6DL_UIB
+	/* power good line from LED driver */
+	mxc_iomux_v3_setup_pad(IOMUX_PAD(0x0520, 0x0150, 5, 0x0000, 0, 
+		PAD_CTL_PUS_100K_UP | PAD_CTL_HYS));
+	gpio_direction_input(LVDS0_AVDD_PG_N);
+
+	/* PWM backlight */
+	mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_9__PWM1_PWMO);
+	// force high
+	// mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_9__GPIO_1_9);
+	// gpio_direction_output(IMX_GPIO_NR(1, 9), 1);
+
+	/* LVDS enable */
+	mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_17__GPIO_7_12);
+	gpio_direction_output(LVDS0_EN, 1);
+
+	/* LVDS CNTRL_VGH */
+	mxc_iomux_v3_setup_pad(MX6DL_PAD_SD4_DAT2__GPIO_2_10);
+	gpio_direction_output(LCD_CNTRL_VGH, 1);
+
+	/* test external LEDs */
+	mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_5__GPIO_1_5);
+	mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_7__GPIO_1_7);
+	mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_8__GPIO_1_8);
+	gpio_direction_output(EXT_LED1, 0);
+	gpio_direction_output(EXT_LED2, 0);
+	gpio_direction_output(EXT_LED3, 1);
+#else /* !CONFIG_MX6DL_UIB */
 	/* PWM backlight */
 	mxc_iomux_v3_setup_pad(MX6DL_PAD_SD1_DAT3__PWM1_PWMO);
 	/* LVDS panel CABC_EN0 */
 	mxc_iomux_v3_setup_pad(MX6DL_PAD_NANDF_CS2__GPIO_6_15);
 	/* LVDS panel CABC_EN1 */
 	mxc_iomux_v3_setup_pad(MX6DL_PAD_NANDF_CS3__GPIO_6_16);
+#endif /* CONFIG_MX6DL_UIB */
 #endif
+
+#ifndef CONFIG_MX6DL_UIB
 	/*
 	 * Set LVDS panel CABC_EN0 to low to disable
 	 * CABC function. This function will turn backlight
@@ -1563,6 +1625,7 @@ void lcd_enable(void)
 	reg = readl(CCM_BASE_ADDR + CLKCTL_CCGR3);
 	reg &= ~0xC033;
 	writel(reg, CCM_BASE_ADDR + CLKCTL_CCGR3);
+#endif /* !CONFIG_MX6DL_UIB */
 
 #if defined CONFIG_MX6Q
 	/*
@@ -1843,6 +1906,7 @@ int check_recovery_cmd_file(void)
 	int button_pressed = 0;
 	int recovery_mode = 0;
 
+#ifndef CONFIG_MX6DL_UIB
 	recovery_mode = check_and_clean_recovery_flag();
 
 	/* Check Recovery Combo Button press or not. */
@@ -1854,6 +1918,7 @@ int check_recovery_cmd_file(void)
 		button_pressed = 1;
 		printf("Recovery key pressed\n");
 	}
+#endif /* !CONFIG_MX6DL_UIB */
 
 	return recovery_mode || button_pressed;
 }
