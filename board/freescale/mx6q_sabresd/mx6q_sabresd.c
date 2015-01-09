@@ -133,12 +133,22 @@ extern int ipuv3_fb_init(struct fb_videomode *mode, int di,
 			ipu_di_clk_parent_t di_clk_parent,
 			int di_clk_val);
 
+#ifdef CONFIG_MX6DL_UIB
+# define LVDS_CLK 51200000
+static struct fb_videomode lvds_xga = {
+	 "WSVGA", 60, 1024, 600, 19531, 100, 100, 10, 10, 120, 15,
+	 FB_SYNC_EXT,
+	 FB_VMODE_NONINTERLACED,
+	 0,
+};
+#else
+# define LVDS_CLK 65000000
 static struct fb_videomode lvds_xga = {
 	 "XGA", 60, 1024, 768, 15385, 220, 40, 21, 7, 60, 10,
 	 FB_SYNC_EXT,
 	 FB_VMODE_NONINTERLACED,
 	 0,
-};
+#endif
 
 vidinfo_t panel_info;
 #endif
@@ -1564,9 +1574,6 @@ void lcd_enable(void)
 
 	/* PWM backlight */
 	mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_9__PWM1_PWMO);
-	// force high
-	// mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_9__GPIO_1_9);
-	// gpio_direction_output(IMX_GPIO_NR(1, 9), 1);
 
 	/* LVDS enable */
 	mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_17__GPIO_7_12);
@@ -1797,7 +1804,7 @@ void lcd_enable(void)
 	}
 
 	ret = ipuv3_fb_init(&lvds_xga, di, IPU_PIX_FMT_RGB666,
-			DI_PCLK_LDB, 65000000);
+			DI_PCLK_LDB, LVDS_CLK);
 	if (ret)
 		puts("LCD cannot be configured\n");
 
