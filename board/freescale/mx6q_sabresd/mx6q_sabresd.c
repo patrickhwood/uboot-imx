@@ -148,8 +148,8 @@ static struct fb_videomode lvds_xga = {
 	 FB_SYNC_EXT,
 	 FB_VMODE_NONINTERLACED,
 	 0,
+};
 #endif
-
 vidinfo_t panel_info;
 #endif
 
