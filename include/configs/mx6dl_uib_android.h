@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2010-2013 Freescale Semiconductor, Inc.
  *
- * Configuration settings for the MX6DL SabreSD Freescale board.
+ * Configuration settings for the MX6DL UIB EFI board.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -19,8 +19,8 @@
  * MA 02111-1307 USA
  */
 
-#ifndef MX6Q_SABRESD_ANDROID_H
-#define MX6Q_SABRESD_ANDROID_H
+#ifndef MX6DL_UIB_ANDROID_H
+#define MX6DL_UIB_ANDROID_H
 
 #include <asm/arch/mx6.h>
 #include "mx6dl_sabresd.h"
@@ -41,7 +41,7 @@
 #define CONFIG_FASTBOOT_VENDOR_ID      0x18d1
 #define CONFIG_FASTBOOT_PRODUCT_ID     0x0d02
 #define CONFIG_FASTBOOT_BCD_DEVICE     0x311
-#define CONFIG_FASTBOOT_MANUFACTURER_STR  "Freescale"
+#define CONFIG_FASTBOOT_MANUFACTURER_STR  "EFI"
 #define CONFIG_FASTBOOT_PRODUCT_NAME_STR "i.mx6dl UIB"
 #define CONFIG_FASTBOOT_INTERFACE_STR	 "Android fastboot"
 #define CONFIG_FASTBOOT_CONFIGURATION_STR  "Android fastboot"
