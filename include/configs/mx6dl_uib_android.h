@@ -108,8 +108,9 @@
 #undef CONFIG_LOADADDR
 #undef CONFIG_RD_LOADADDR
 #undef CONFIG_EXTRA_ENV_SETTINGS
+#undef CONFIG_BOOTDELAY
 
-
+#define CONFIG_BOOTDELAY 1
 #define CONFIG_LOADADDR		0x10800000	/* loadaddr env var */
 #define CONFIG_RD_LOADADDR      0x11000000
 
@@ -121,7 +122,7 @@
 		"kernel=uImage\0"													\
 		"nfsroot=/opt/eldk/arm\0"											\
 		"bootargs_base=setenv bootargs console=ttymxc0,115200 init=/init "	\
-		"video=mxcfb0:dev=ldb,LDB-WSVGA,bpp=32 ldb=dul0 "							\
+		"video=mxcfb0:dev=ldb,LDB-WSVGA,bpp=32 ldb=sin0 "							\
 		"video=mxcfb1:off video=mxcfb2:off fbmem=10M "						\
 		"fb0base=0x27b00000 vmalloc=400M androidboot.console=ttymxc0 "		\
 		"androidboot.hardware=freescale androidboot.serialno=0a01234567890abc\0" \
