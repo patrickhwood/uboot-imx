@@ -1525,38 +1525,21 @@ void lcd_enable(void)
 	imx_pwm_config(pwm0, 50000, 50000);
 	imx_pwm_enable(pwm0);
 
-#if defined CONFIG_MX6Q
-	/* PWM backlight */
-	mxc_iomux_v3_setup_pad(MX6Q_PAD_SD1_DAT3__PWM1_PWMO);
-	/* LVDS panel CABC_EN0 */
-	mxc_iomux_v3_setup_pad(MX6Q_PAD_NANDF_CS2__GPIO_6_15);
-	/* LVDS panel CABC_EN1 */
-	mxc_iomux_v3_setup_pad(MX6Q_PAD_NANDF_CS3__GPIO_6_16);
-#elif defined CONFIG_MX6DL
-	/* power good line from LED driver */
+	/* power good line from LED driver @@@ useful? */
 	mxc_iomux_v3_setup_pad(IOMUX_PAD(0x0520, 0x0150, 5, 0x0000, 0, 
 		PAD_CTL_PUS_100K_UP | PAD_CTL_HYS));
 	gpio_direction_input(LVDS0_AVDD_PG_N);
 
 	/* PWM backlight */
-	mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_9__PWM1_PWMO);
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_9__PWM1_PWMO));
 
 	/* LVDS enable */
-	mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_17__GPIO_7_12);
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_17__GPIO_7_12));
 	gpio_direction_output(LVDS0_EN, 1);
 
 	/* LVDS CNTRL_VGH */
-	mxc_iomux_v3_setup_pad(MX6DL_PAD_SD4_DAT2__GPIO_2_10);
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_SD4_DAT2__GPIO_2_10));
 	gpio_direction_output(LCD_CNTRL_VGH, 1);
-
-	/* test external LEDs */
-	mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_5__GPIO_1_5);
-	mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_7__GPIO_1_7);
-	mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_8__GPIO_1_8);
-	gpio_direction_output(EXT_LED1, 0);
-	gpio_direction_output(EXT_LED2, 0);
-	gpio_direction_output(EXT_LED3, 1);
-#endif
 
 #if defined CONFIG_MX6Q
 	/*
@@ -1794,6 +1777,15 @@ int board_init(void)
 	writel(reg, SNVS_BASE_ADDR + 0x4c);/*clear LPSR*/
 
 	mxc_iomux_v3_init((void *)IOMUXC_BASE_ADDR);
+
+	/* set up external LEDs */
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_5__GPIO_1_5));
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_7__GPIO_1_7));
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_8__GPIO_1_8));
+	gpio_direction_output(EXT_LED1, 1);
+	gpio_direction_output(EXT_LED2, 0);
+	gpio_direction_output(EXT_LED3, 0);
+
 	setup_boot_device();
 	fsl_set_system_rev();
 
@@ -1884,6 +1876,9 @@ int board_late_init(void)
 	if (ret)
 		return -1;
 #endif
+	gpio_set_value(EXT_LED1, 0);
+	gpio_set_value(EXT_LED2, 1);
+	gpio_set_value(EXT_LED3, 0);
 	return 0;
 }
 
