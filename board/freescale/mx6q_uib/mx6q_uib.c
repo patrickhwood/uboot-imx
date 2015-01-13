@@ -91,11 +91,9 @@ DECLARE_GLOBAL_DATA_PTR;
 
 static enum boot_device boot_dev;
 
-#define GPIO_VOL_DN_KEY IMX_GPIO_NR(1, 5)
 #define USB_OTG_PWR IMX_GPIO_NR(3, 22)
 #define USB_H1_POWER IMX_GPIO_NR(1, 29)
 
-#ifdef CONFIG_MX6DL_UIB
 #define TOUCH_RST_N IMX_GPIO_NR(3, 24)
 #define LVDS0_EN IMX_GPIO_NR(7, 12)
 #define LVDS0_AVDD_PG_N IMX_GPIO_NR(3, 19)
@@ -104,7 +102,6 @@ static enum boot_device boot_dev;
 #define EXT_LED1 IMX_GPIO_NR(1, 5)
 #define EXT_LED2 IMX_GPIO_NR(1, 7)
 #define EXT_LED3 IMX_GPIO_NR(1, 8)
-#endif /* CONFIG_MX6DL_UIB */
 
 extern int sata_curr_device;
 
@@ -126,14 +123,13 @@ static struct pwm_device pwm0 = {
 	.pwmo_invert = 0,
 };
 
-static int di = 1;
+static int di = 0;
 
 extern int ipuv3_fb_init(struct fb_videomode *mode, int di,
 			int interface_pix_fmt,
 			ipu_di_clk_parent_t di_clk_parent,
 			int di_clk_val);
 
-#ifdef CONFIG_MX6DL_UIB
 # define LVDS_CLK 51200000
 static struct fb_videomode lvds_xga = {
 	 "WSVGA", 60, 1024, 600, 19531, 100, 100, 10, 10, 120, 15,
@@ -141,15 +137,6 @@ static struct fb_videomode lvds_xga = {
 	 FB_VMODE_NONINTERLACED,
 	 0,
 };
-#else
-# define LVDS_CLK 65000000
-static struct fb_videomode lvds_xga = {
-	 "XGA", 60, 1024, 768, 15385, 220, 40, 21, 7, 60, 10,
-	 FB_SYNC_EXT,
-	 FB_VMODE_NONINTERLACED,
-	 0,
-};
-#endif
 vidinfo_t panel_info;
 #endif
 
@@ -406,23 +393,6 @@ static void setup_uart(void)
 #ifdef CONFIG_VIDEO_MX5
 void setup_lvds_poweron(void)
 {
-#ifndef CONFIG_MX6DL_UIB
-	int reg;
-	/* AUX_5V_EN: GPIO(6, 10) */
-#ifdef CONFIG_MX6DL
-	mxc_iomux_v3_setup_pad(MX6DL_PAD_NANDF_RB0__GPIO_6_10);
-#else
-	mxc_iomux_v3_setup_pad(MX6Q_PAD_NANDF_RB0__GPIO_6_10);
-#endif
-
-	reg = readl(GPIO6_BASE_ADDR + GPIO_GDIR);
-	reg |= (1 << 10);
-	writel(reg, GPIO6_BASE_ADDR + GPIO_GDIR);
-
-	reg = readl(GPIO6_BASE_ADDR + GPIO_DR);
-	reg |= (1 << 10);
-	writel(reg, GPIO6_BASE_ADDR + GPIO_DR);
-#endif /* !CONFIG_MX6DL_UIB */
 }
 #endif
 
@@ -495,14 +465,12 @@ static void setup_i2c(unsigned int module_base)
 		mxc_iomux_v3_setup_pad(MX6DL_PAD_GPIO_6__I2C3_SDA);
 #endif
 
-#ifdef CONFIG_MX6DL_UIB
 		printf("reset touch panel\n");
 		/* reset UIB touch panel */
 		mxc_iomux_v3_setup_pad(MX6DL_PAD_EIM_D24__GPIO_3_24);
 		gpio_direction_output(TOUCH_RST_N, 0);
 		__udelay(100000);
 		gpio_direction_output(TOUCH_RST_N, 1);
-#endif
 
 		/* Enable i2c clock */
 		reg = readl(CCM_BASE_ADDR + CLKCTL_CCGR2);
@@ -1546,7 +1514,6 @@ void lcd_enable(void)
 
 	s = getenv("lvds_num");
 	di = simple_strtol(s, NULL, 10);
-	printf("lvds num = %d\n", di);
 
 	/*
 	* hw_rev 2: IPUV3DEX
@@ -1566,7 +1533,6 @@ void lcd_enable(void)
 	/* LVDS panel CABC_EN1 */
 	mxc_iomux_v3_setup_pad(MX6Q_PAD_NANDF_CS3__GPIO_6_16);
 #elif defined CONFIG_MX6DL
-#ifdef CONFIG_MX6DL_UIB
 	/* power good line from LED driver */
 	mxc_iomux_v3_setup_pad(IOMUX_PAD(0x0520, 0x0150, 5, 0x0000, 0, 
 		PAD_CTL_PUS_100K_UP | PAD_CTL_HYS));
@@ -1590,49 +1556,7 @@ void lcd_enable(void)
 	gpio_direction_output(EXT_LED1, 0);
 	gpio_direction_output(EXT_LED2, 0);
 	gpio_direction_output(EXT_LED3, 1);
-#else /* !CONFIG_MX6DL_UIB */
-	/* PWM backlight */
-	mxc_iomux_v3_setup_pad(MX6DL_PAD_SD1_DAT3__PWM1_PWMO);
-	/* LVDS panel CABC_EN0 */
-	mxc_iomux_v3_setup_pad(MX6DL_PAD_NANDF_CS2__GPIO_6_15);
-	/* LVDS panel CABC_EN1 */
-	mxc_iomux_v3_setup_pad(MX6DL_PAD_NANDF_CS3__GPIO_6_16);
-#endif /* CONFIG_MX6DL_UIB */
 #endif
-
-#ifndef CONFIG_MX6DL_UIB
-	/*
-	 * Set LVDS panel CABC_EN0 to low to disable
-	 * CABC function. This function will turn backlight
-	 * automatically according to display content, so
-	 * simply disable it to get rid of annoying unstable
-	 * backlight phenomena.
-	 */
-	reg = readl(GPIO6_BASE_ADDR + GPIO_GDIR);
-	reg |= (1 << 15);
-	writel(reg, GPIO6_BASE_ADDR + GPIO_GDIR);
-
-	reg = readl(GPIO6_BASE_ADDR + GPIO_DR);
-	reg &= ~(1 << 15);
-	writel(reg, GPIO6_BASE_ADDR + GPIO_DR);
-
-	/*
-	 * Set LVDS panel CABC_EN1 to low to disable
-	 * CABC function.
-	 */
-	reg = readl(GPIO6_BASE_ADDR + GPIO_GDIR);
-	reg |= (1 << 16);
-	writel(reg, GPIO6_BASE_ADDR + GPIO_GDIR);
-
-	reg = readl(GPIO6_BASE_ADDR + GPIO_DR);
-	reg &= ~(1 << 16);
-	writel(reg, GPIO6_BASE_ADDR + GPIO_DR);
-
-	/* Disable ipu1_clk/ipu1_di_clk_x/ldb_dix_clk. */
-	reg = readl(CCM_BASE_ADDR + CLKCTL_CCGR3);
-	reg &= ~0xC033;
-	writel(reg, CCM_BASE_ADDR + CLKCTL_CCGR3);
-#endif /* !CONFIG_MX6DL_UIB */
 
 #if defined CONFIG_MX6Q
 	/*
