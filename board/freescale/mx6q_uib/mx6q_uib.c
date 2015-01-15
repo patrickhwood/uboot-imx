@@ -118,8 +118,14 @@ unsigned short colormap[65536];
 unsigned short colormap[16777216];
 #endif
 
-static struct pwm_device pwm0 = {
-	.pwm_id = 0,
+/* Note: IMX PWM pad numbering starts at 1, imx_pwm_* functions start at 0 */
+static struct pwm_device pwm1 = {
+	.pwm_id = 0,		/* maps to IMX IOMUX PAD PWM1_PWMO */
+	.pwmo_invert = 0,
+};
+
+static struct pwm_device pwm3 = {
+	.pwm_id = 2,		/* maps to IMX IOMUX PAD PWM3_PWMO */
 	.pwmo_invert = 0,
 };
 
@@ -1522,15 +1528,14 @@ void lcd_enable(void)
 	*/
 	g_ipu_hw_rev = IPUV3_HW_REV_IPUV3H;
 
-	imx_pwm_config(pwm0, 50000, 50000);
-	imx_pwm_enable(pwm0);
-
 	/* power good line from LED driver @@@ useful? */
 	mxc_iomux_v3_setup_pad(IOMUX_PAD(0x0520, 0x0150, 5, 0x0000, 0, 
 		PAD_CTL_PUS_100K_UP | PAD_CTL_HYS));
 	gpio_direction_input(LVDS0_AVDD_PG_N);
 
 	/* PWM backlight */
+	imx_pwm_config(pwm1, 50000, 50000);
+	imx_pwm_enable(pwm1);
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_9__PWM1_PWMO));
 
 	/* LVDS enable */
@@ -2000,6 +2005,11 @@ void enet_board_init(void)
 	reg = readl(GPIO1_BASE_ADDR + 0x0);
 	reg |= 0x2000000;
 	writel(reg, GPIO1_BASE_ADDR + 0x0);
+
+	/* PWM speaker test */
+	imx_pwm_config(pwm3, 10000, 1000000);
+	imx_pwm_enable(pwm3);
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_SD4_DAT1__PWM3_PWMO));
 }
 #endif
 

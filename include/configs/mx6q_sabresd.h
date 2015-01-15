@@ -346,5 +346,7 @@
 	#define CONFIG_IMX_PWM
 	#define IMX_PWM1_BASE    PWM1_BASE_ADDR
 	#define IMX_PWM2_BASE    PWM2_BASE_ADDR
+	#define IMX_PWM3_BASE    PWM3_BASE_ADDR
+	#define IMX_PWM4_BASE    PWM4_BASE_ADDR
 #endif
 #endif				/* __CONFIG_H */

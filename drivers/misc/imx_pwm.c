@@ -50,8 +50,20 @@ int imx_pwm_config(struct pwm_device pwm, int duty_ns, int period_ns)
 	if (period_ns == 0 || duty_ns > period_ns)
 		return -1;
 
-	pwm.mmio_base = pwm.pwm_id ? (unsigned long)IMX_PWM2_BASE:
-				(unsigned long)IMX_PWM1_BASE;
+	switch (pwm.pwm_id) {
+		case 0:
+			pwm.mmio_base = (unsigned long)IMX_PWM1_BASE;
+			break;
+		case 1:
+			pwm.mmio_base = (unsigned long)IMX_PWM2_BASE;
+			break;
+		case 2:
+			pwm.mmio_base = (unsigned long)IMX_PWM3_BASE;
+			break;
+		case 3:
+			pwm.mmio_base = (unsigned long)IMX_PWM4_BASE;
+			break;
+	}
 
 	if (pwm.pwmo_invert)
 		duty_ns = period_ns - duty_ns;
@@ -90,8 +102,20 @@ int imx_pwm_enable(struct pwm_device pwm)
 	if (pwm.enable_pwm_clk)
 		pwm.enable_pwm_clk();
 
-	pwm.mmio_base = pwm.pwm_id ? (unsigned long)IMX_PWM2_BASE:
-				(unsigned long)IMX_PWM1_BASE;
+	switch (pwm.pwm_id) {
+		case 0:
+			pwm.mmio_base = (unsigned long)IMX_PWM1_BASE;
+			break;
+		case 1:
+			pwm.mmio_base = (unsigned long)IMX_PWM2_BASE;
+			break;
+		case 2:
+			pwm.mmio_base = (unsigned long)IMX_PWM3_BASE;
+			break;
+		case 3:
+			pwm.mmio_base = (unsigned long)IMX_PWM4_BASE;
+			break;
+	}
 
 	reg = readl(pwm.mmio_base + MX_PWMCR);
 	reg |= MX_PWMCR_EN;
@@ -108,8 +132,20 @@ int imx_pwm_disable(struct pwm_device pwm)
 	if (pwm.disable_pwm_pad)
 		pwm.disable_pwm_pad();
 
-	pwm.mmio_base = pwm.pwm_id ? (unsigned long)IMX_PWM2_BASE:
-				(unsigned long)IMX_PWM1_BASE;
+	switch (pwm.pwm_id) {
+		case 0:
+			pwm.mmio_base = (unsigned long)IMX_PWM1_BASE;
+			break;
+		case 1:
+			pwm.mmio_base = (unsigned long)IMX_PWM2_BASE;
+			break;
+		case 2:
+			pwm.mmio_base = (unsigned long)IMX_PWM3_BASE;
+			break;
+		case 3:
+			pwm.mmio_base = (unsigned long)IMX_PWM4_BASE;
+			break;
+	}
 
 	writel(0, pwm.mmio_base + MX_PWMCR);
 
