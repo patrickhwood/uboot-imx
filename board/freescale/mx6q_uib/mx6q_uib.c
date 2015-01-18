@@ -894,7 +894,6 @@ iomux_v3_cfg_t nfc_pads[] = {
 	MX6Q_PAD_NANDF_D5__RAWNAND_D5,
 	MX6Q_PAD_NANDF_D6__RAWNAND_D6,
 	MX6Q_PAD_NANDF_D7__RAWNAND_D7,
-	MX6Q_PAD_SD4_DAT0__RAWNAND_DQS,
 };
 #elif defined CONFIG_MX6DL
 iomux_v3_cfg_t nfc_pads[] = {
@@ -916,7 +915,6 @@ iomux_v3_cfg_t nfc_pads[] = {
 	MX6DL_PAD_NANDF_D5__RAWNAND_D5,
 	MX6DL_PAD_NANDF_D6__RAWNAND_D6,
 	MX6DL_PAD_NANDF_D7__RAWNAND_D7,
-	MX6DL_PAD_SD4_DAT0__RAWNAND_DQS,
 };
 #endif
 
@@ -927,7 +925,6 @@ int setup_gpmi_nand(void)
 	/* config gpmi nand iomux */
 	mxc_iomux_v3_setup_multiple_pads(nfc_pads,
 			ARRAY_SIZE(nfc_pads));
-
 
 	/* config gpmi and bch clock to 11Mhz*/
 	reg = readl(CCM_BASE_ADDR + CLKCTL_CS2CDR);
