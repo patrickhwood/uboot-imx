@@ -1831,7 +1831,7 @@ int check_recovery_cmd_file(void)
 	int button_pressed = 0;
 	int recovery_mode = 0;
 
-#ifndef CONFIG_MX6DL_UIB
+#if !defined(CONFIG_MX6DL_UIB) && !defined(CONFIG_MX6Q_UIB)
 	recovery_mode = check_and_clean_recovery_flag();
 
 	/* Check Recovery Combo Button press or not. */
@@ -1843,7 +1843,7 @@ int check_recovery_cmd_file(void)
 		button_pressed = 1;
 		printf("Recovery key pressed\n");
 	}
-#endif /* !CONFIG_MX6DL_UIB */
+#endif /* !CONFIG_MX6DL_UIB && !CONFIG_MX6Q_UIB */
 
 	return recovery_mode || button_pressed;
 }
