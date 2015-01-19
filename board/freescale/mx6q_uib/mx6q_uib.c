@@ -2004,7 +2004,7 @@ void enet_board_init(void)
 	writel(reg, GPIO1_BASE_ADDR + 0x0);
 
 	/* PWM speaker test */
-	imx_pwm_config(pwm3, 10000, 1000000);
+	imx_pwm_config(pwm3, 0, 1000000);
 	imx_pwm_enable(pwm3);
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_SD4_DAT1__PWM3_PWMO));
 }
