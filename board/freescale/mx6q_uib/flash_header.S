@@ -69,7 +69,7 @@ write_dcd_cmd:    .word 0x049C02CC /* Tag=0xCC, Len=83*8 + 4, Param=0x04 */
 /* EFI UIB DDR DCD header */
 #define EFI_MXC_DCD_ITEM(addr, val) \
         .word CPU_2_BE_32(addr) ;     \
-        .word CPU_2_BE_32(val) ;     \
+        .word CPU_2_BE_32(val) ;
 /* //,============================================================================					 */
 /* //init script for i.MX6DL DDR3					 */
 /* //,============================================================================					 */
@@ -138,12 +138,12 @@ EFI_MXC_DCD_ITEM(	0x020e048c ,	0x00000030	/* // IOMUXC_SW_PAD_CTL_PAD_DRAM_DQM7	
 /* // DDR Controller Registers					 */
 /* //,============================================================================					 */
 /* // Manufacturer:	Micron				 */
-/* // Device Part Number:	MT41J128M16HA-15E				 */
-/* // Clock Freq.: 	360MHz				 */
-/* // Density per CS in Gb: 	8				 */
+/* // Device Part Number:	MT41K256M16HA-125E				 */
+/* // Clock Freq.: 	400MHz				 */
+/* // Density per CS in Gb: 	16				 */
 /* // Chip Selects used:	1				 */
 /* // Number of Banks:	8				 */
-/* // Row address:    	14				 */
+/* // Row address:    	15				 */
 /* // Column address: 	10				 */
 /* // Data bus width	64				 */
 /* //,============================================================================					 */
@@ -166,18 +166,18 @@ EFI_MXC_DCD_ITEM(	0x021b4810 , 	0x001F001F			)
 /* //######################################################					 */
 					
 /* //Read DQS Gating calibration					 */
-EFI_MXC_DCD_ITEM(	0x021b083c ,	0x42340234	/* // MPDGCTRL0 PHY0	0x00320000	0x4220021F */)
-EFI_MXC_DCD_ITEM(	0x021b0840 ,	0x02280228	/* // MPDGCTRL1 PHY0	0x00000000	0x0207017E */)
-EFI_MXC_DCD_ITEM(	0x021b483c ,	0x4220022C	/* // MPDGCTRL0 PHY1	0x00000000	0x4201020C */)
-EFI_MXC_DCD_ITEM(	0x021b4840 ,	0x021C021C	/* // MPDGCTRL1 PHY1	0x02000000	0x01660172 */)
+EFI_MXC_DCD_ITEM(	0x021b083c ,	0x42300230	/* // MPDGCTRL0 PHY0	0x00320000	0x4220021F */)
+EFI_MXC_DCD_ITEM(	0x021b0840 ,	0x02240224	/* // MPDGCTRL1 PHY0	0x00000000	0x0207017E */)
+EFI_MXC_DCD_ITEM(	0x021b483c ,	0x421C0228	/* // MPDGCTRL0 PHY1	0x00000000	0x4201020C */)
+EFI_MXC_DCD_ITEM(	0x021b4840 ,	0x02140214	/* // MPDGCTRL1 PHY1	0x02000000	0x01660172 */)
 					
 /* //Read calibration					 */
-EFI_MXC_DCD_ITEM(	0x021b0848 ,	0x42424442	/* // MPRDDLCTL PHY0	0x00000100	0x4A4D4E4D */)
-EFI_MXC_DCD_ITEM(	0x021b4848 ,	0x484A4846	/* // MPRDDLCTL PHY1	0x02400040	0x4A4F5049 */)
+EFI_MXC_DCD_ITEM(	0x021b0848 ,	0x40424444	/* // MPRDDLCTL PHY0	0x00000100	0x4A4D4E4D */)
+EFI_MXC_DCD_ITEM(	0x021b4848 ,	0x46464844	/* // MPRDDLCTL PHY1	0x02400040	0x4A4F5049 */)
 					
 /* //Write calibration					 */
-EFI_MXC_DCD_ITEM(	0x021b0850 ,	0x322E2830	/* // MPWRDLCTL PHY0	0x01000000	0x3F3C3D31 */)
-EFI_MXC_DCD_ITEM(	0x021b4850 ,	0x36323628	/* // MPWRDLCTL PHY1	0x0a000100	0x3238372B */)
+EFI_MXC_DCD_ITEM(	0x021b0850 ,	0x34322A30	/* // MPWRDLCTL PHY0	0x01000000	0x3F3C3D31 */)
+EFI_MXC_DCD_ITEM(	0x021b4850 ,	0x3634342E	/* // MPWRDLCTL PHY1	0x0a000100	0x3238372B */)
 					
 /* //read data bit delay: (3 is the reccommended default value, although out of reset value is 0):					 */
 EFI_MXC_DCD_ITEM(	0x021b081c ,	0x33333333	/* // DDR_PHY_P0_MPREDQBY0DL3	Original Values (Delete Later)	Difference? */)
@@ -198,10 +198,10 @@ EFI_MXC_DCD_ITEM(	0x021b08b8 ,	0x00000800 	/* // DDR_PHY_P0_MPMUR0, frc_msr	0x02
 EFI_MXC_DCD_ITEM(	0x021b48b8 ,	0x00000800 	/* // DDR_PHY_P0_MPMUR0, frc_msr	0x00000000	0x00000800  */)
 					
 /* //MMDC init:					 */
-EFI_MXC_DCD_ITEM(	0x021b0004 ,	0x0002002D	/* // MMDC0_MDPDC 	0x00000100	0x0002002D */)
+EFI_MXC_DCD_ITEM(	0x021b0004 ,	0x0001002D	/* // MMDC0_MDPDC 	0x00000100	0x0001002D */)
 EFI_MXC_DCD_ITEM(	0x021b0008 ,	0x00333030	/* // MMDC0_MDOTC	0x00050612	0x00333030 */)
-EFI_MXC_DCD_ITEM(	0x021b000c ,	0x393D5102	/* // MMDC0_MDCFG0	0x06030301	0x393D5102 */)
-EFI_MXC_DCD_ITEM(	0x021b0010 ,	0x922C8B63	/* // MMDC0_MDCFG1	0x00000000	0x922C8B63 */)
+EFI_MXC_DCD_ITEM(	0x021b000c ,	0x676B52F3	/* // MMDC0_MDCFG0	0x06030301	0x676B52F3 */)
+EFI_MXC_DCD_ITEM(	0x021b0010 ,	0xB66D8BC3	/* // MMDC0_MDCFG1	0x00000000	0xB66D8BC3 */)
 EFI_MXC_DCD_ITEM(	0x021b0014 ,	0x01FF00DB	/* // MMDC0_MDCFG2	0x00000a02	0x01FF00DB */)
 EFI_MXC_DCD_ITEM(	0x021b0018 ,	0x00001740	/* // MMDC0_MDMISC	0x015dc002	0x00001740 */)
 /* //NOTE about MDMISC RALAT:					 */
@@ -212,22 +212,22 @@ EFI_MXC_DCD_ITEM(	0x021b0018 ,	0x00001740	/* // MMDC0_MDMISC	0x015dc002	0x000017
 					
 EFI_MXC_DCD_ITEM(	0x021b001c ,	0x00008000	/* // MMDC0_MDSCR, set the Configuration request bit during MMDC set up	0x00000606	0x00008000 */)
 EFI_MXC_DCD_ITEM(	0x021b002c ,	0x000026d2	/* // MMDC0_MDRWD; recommend to maintain the default values	0x00000003	0x000026d2 */)
-EFI_MXC_DCD_ITEM(	0x021b0030 ,	0x003D1023	/* // MMDC0_MDOR	0x00001401	0x003D1023 */)
-EFI_MXC_DCD_ITEM(	0x021b0040 ,	0x00000027	/* // CS0_END 	0x0018001b	0x00000027 */)
+EFI_MXC_DCD_ITEM(	0x021b0030 ,	0x006B1023	/* // MMDC0_MDOR	0x00001401	0x006B1023 */)
+EFI_MXC_DCD_ITEM(	0x021b0040 ,	0x00000047	/* // CS0_END 	0x0018001b	0x00000047 */)
 					
-EFI_MXC_DCD_ITEM(	0x021b0000 ,	0x831A0000	/* // MMDC0_MDCTL	0x00010000	0x831A0000 */)
+EFI_MXC_DCD_ITEM(	0x021b0000 ,	0x841A0000	/* // MMDC0_MDCTL	0x00010000	0x841A0000 */)
 					
 /* // Mode register writes					 */
 EFI_MXC_DCD_ITEM(	0x021b001c ,	0x04008032	/* // MMDC0_MDSCR, MR2 write, CS0	0x00000000	0x04008032 */)
 EFI_MXC_DCD_ITEM(	0x021b001c ,	0x00008033	/* // MMDC0_MDSCR, MR3 write, CS0	0x00000000	0x00008033 */)
 EFI_MXC_DCD_ITEM(	0x021b001c ,	0x00048031	/* // MMDC0_MDSCR, MR1 write, CS0	0x00000000	0x00048031 */)
-EFI_MXC_DCD_ITEM(	0x021b001c ,	0x05108030	/* // MMDC0_MDSCR, MR0 write, CS0	0x02000000	0x05108030 */)
+EFI_MXC_DCD_ITEM(	0x021b001c ,	0x05208030	/* // MMDC0_MDSCR, MR0 write, CS0	0x02000000	0x05208030 */)
 EFI_MXC_DCD_ITEM(	0x021b001c ,	0x04008040	/* // MMDC0_MDSCR, ZQ calibration command sent to device on CS0		 */)
 					
 /* //setmem /32	0x021b001c ,	0x0400803A	// MMDC0_MDSCR, MR2 write, CS1	0x00000000	0x0400803A */
 /* //setmem /32	0x021b001c ,	0x0000803B	// MMDC0_MDSCR, MR3 write, CS1	0x00000000	0x0000803B */
 /* //setmem /32	0x021b001c ,	0x00048039	// MMDC0_MDSCR, MR1 write, CS1	0x00000000	0x00048039 */
-/* //setmem /32	0x021b001c ,	0x05108038	// MMDC0_MDSCR, MR0 write, CS1	0x02000000	0x05108038 */
+/* //setmem /32	0x021b001c ,	0x05208038	// MMDC0_MDSCR, MR0 write, CS1	0x02000000	0x05208038 */
 /* //setmem /32	0x021b001c ,	0x04008048	// MMDC0_MDSCR, ZQ calibration command sent to device on CS1		 */
 					
 					
@@ -237,7 +237,7 @@ EFI_MXC_DCD_ITEM(	0x021b0818 ,	0x00011117	/* // DDR_PHY_P0_MPODTCTRL	0x00000000	
 EFI_MXC_DCD_ITEM(	0x021b4818 ,	0x00011117	/* // DDR_PHY_P1_MPODTCTRL	0x00000000	0x00011117 */)
 					
 					
-EFI_MXC_DCD_ITEM(	0x021b0004 ,	0x0002556D	/* // MMDC0_MDPDC with PWDT bits set		 */)
+EFI_MXC_DCD_ITEM(	0x021b0004 ,	0x0001556D	/* // MMDC0_MDPDC with PWDT bits set		 */)
 EFI_MXC_DCD_ITEM(	0x021b0404 , 	0x00011006	/* // MMDC0_MAPSR ADOPT power down enabled, MMDC will enter automatically to self-refresh while the number of idle cycle reached.		 */)
 					
 EFI_MXC_DCD_ITEM(	0x021b001c ,	0x00000000	/* // MMDC0_MDSCR, clear this register (especially the configuration bit as initialization is complete)	0x01000202	0x00000000 */)
