@@ -25,6 +25,9 @@
 #include <asm/arch/mx6.h>
 #include "mx6q_sabresd.h"
 
+#undef PHYS_SDRAM_1_SIZE
+#define PHYS_SDRAM_1_SIZE	(2u * 1024 * 1024 * 1024)
+
 #ifdef CONFIG_CMD_I2C
 	#undef CONFIG_SYS_I2C_PORT
 	#define CONFIG_SYS_I2C_PORT             I2C2_BASE_ADDR
