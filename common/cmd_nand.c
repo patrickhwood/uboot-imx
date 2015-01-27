@@ -215,6 +215,62 @@ static void nand_print_info(int idx)
 	       nand->name, nand->erasesize >> 10);
 }
 
+static int nand_test_block(nand_info_t *nand, ulong off, int erase)
+{
+	nand_erase_options_t opts;
+	u_char *data, *readdata;
+	int i, ret;
+	size_t size;
+
+	printf("test block %lx\n", off);
+
+	if (erase) {
+		memset(&opts, 0, sizeof(opts));
+		opts.offset = off;
+		opts.length = nand->erasesize;
+		opts.jffs2  = 0;
+		opts.quiet  = 1;
+		ret = nand_erase_opts(nand, &opts);
+	}
+
+	size = nand->writesize;
+	data = (u_char *) malloc(size);
+	readdata = (u_char *) malloc(size);
+	if (!data || !readdata) {
+		puts("No memory for test buffers\n");
+		return 1;
+	}
+
+	for (i = 0; i < size; i++)
+		data[i] = ~i;
+
+	for (i = 0; i < nand->erasesize / size; i++) {
+		ret = nand_write_skip_bad(nand, off, &size, data);
+		if (ret) {
+			printf("error writing at %lx\n", off + i * size);
+			free(data);
+			free(readdata);
+			return ret;
+		}
+		ret = nand_read_skip_bad(nand, off, &size, readdata);
+		if (ret) {
+			printf("error reading at %lx\n", off + i * size);
+			free(data);
+			free(readdata);
+			return ret;
+		}
+		if (memcmp(data, readdata, size)) {
+			printf("bad data at %lx\n", off + i * size);
+			free(data);
+			free(readdata);
+			return 1;
+		}
+	}
+	free(data);
+	free(readdata);
+	return 0;
+}
+
 int do_nand(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 {
 	int i, dev, ret = 0;
@@ -279,7 +335,7 @@ int do_nand(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 	}
 
 	if (strcmp(cmd, "bad") != 0 && strcmp(cmd, "erase") != 0 &&
-	    strncmp(cmd, "dump", 4) != 0 &&
+	    strncmp(cmd, "dump", 4) != 0 && strncmp(cmd, "test", 4) != 0 &&
 	    strncmp(cmd, "read", 4) != 0 && strncmp(cmd, "write", 5) != 0 &&
 	    strcmp(cmd, "scrub") != 0 && strcmp(cmd, "markbad") != 0 &&
 	    strcmp(cmd, "biterr") != 0 &&
@@ -453,6 +509,36 @@ int do_nand(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 		return 1;
 	}
 
+	if (strcmp(cmd, "test") == 0) {
+		int all;
+		int erase;
+		unsigned int size = (unsigned int) nand->size;
+		if (argc < 3)
+			goto usage;
+
+		all = argc > 2 && !strncmp("all", argv[2], 3);
+		erase = (argc > 2 && !strcmp("allerase", argv[2]));
+
+		if (all) {
+			off = 0;
+			/* note: only works for nand size < 4GB, as we can't do 64-bit divides */
+			for (i = 0; i < size / nand->erasesize; i++) {
+				ret = nand_test_block(nand, off, erase);
+				if (ret)
+					return ret;
+				off += nand->erasesize;
+			}
+		}
+		else {
+			off = (int)simple_strtoul(argv[2], NULL, 16);
+			off &= ~(nand->erasesize - 1);
+			ret = nand_test_block(nand, off, 1);
+		}
+
+		printf("\nCompleted nand test\n");
+		return 0;
+	}
+
 #ifdef CONFIG_CMD_NAND_LOCK_UNLOCK
 	if (strcmp(cmd, "lock") == 0) {
 		int tight = 0;
@@ -510,6 +596,10 @@ U_BOOT_CMD(nand, CONFIG_SYS_MAXARGS, 1, do_nand,
 	"nand dump[.oob] off - dump page\n"
 	"nand scrub - really clean NAND erasing bad blocks (UNSAFE)\n"
 	"nand markbad off [...] - mark bad block(s) at offset (UNSAFE)\n"
+	"nand test [all | allerase | offset] - test nand blocks\n"
+	"    all - test entire device (don't erase before writing)\n"
+	"    allerase - test entire device (erase each block before writing)\n"
+	"    offset - erase and test one block at offset (hex, in 256K increments)\n"
 	"nand biterr off - make a bit error at offset (UNSAFE)"
 #ifdef CONFIG_CMD_NAND_LOCK_UNLOCK
 	"\n"
