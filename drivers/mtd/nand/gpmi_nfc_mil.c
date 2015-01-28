@@ -190,7 +190,9 @@ static void gpmi_nfc_select_chip(struct mtd_info *mtd, int chip)
 
 	nfc->begin(mtd);
 
-	gpmi_info->cur_chip = chip;
+	// @@@ WARNING!!!
+	// @@@ UIB Rev 1 workaround!!!
+	gpmi_info->cur_chip = chip * 2;
 
 	MTDDEBUG(MTD_DEBUG_LEVEL2, "<= %s\n", __func__);
 }
