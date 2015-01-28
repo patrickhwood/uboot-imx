@@ -196,6 +196,10 @@ static int init(void)
 	REG_SET(CONFIG_GPMI_REG_BASE, HW_GPMI_CTRL1,
 		BM_GPMI_CTRL1_BCH_MODE);
 
+	/* Select Ganged RDY/BUSY.
+	REG_SET(CONFIG_GPMI_REG_BASE, HW_GPMI_CTRL1,
+		BM_GPMI_CTRL1_GANGED_RDYBUSY); */
+
 	memcpy(&gpmi_nfc_hal.timing, &safe_timing,
 		sizeof(struct gpmi_nfc_timing));
 
