@@ -242,7 +242,7 @@ static int nand_test_block(nand_info_t *nand, ulong off, int erase)
 	}
 
 	for (i = 0; i < size; i++)
-		data[i] = ~i;
+		data[i] = i + (off + get_timer_masked()) / 97 % 91;
 
 	for (i = 0; i < nand->erasesize / size; i++) {
 		ret = nand_write_skip_bad(nand, off, &size, data);
