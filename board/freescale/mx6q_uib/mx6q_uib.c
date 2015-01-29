@@ -1712,7 +1712,7 @@ void lcd_enable(void)
 		writel(reg, CCM_BASE_ADDR + CLKCTL_CCGR3);
 	}
 
-	ret = ipuv3_fb_init(&lvds_xga, di, IPU_PIX_FMT_RGB666,
+	ret = ipuv3_fb_init(&lvds_xga, di, IPU_PIX_FMT_RGB24,
 			DI_PCLK_LDB, LVDS_CLK);
 	if (ret)
 		puts("LCD cannot be configured\n");
@@ -1727,9 +1727,9 @@ void lcd_enable(void)
 	writel(reg, IOMUXC_BASE_ADDR + 0xC);
 
 	if (di == 1)
-		writel(0x40C, IOMUXC_BASE_ADDR + 0x8);
+		writel(0x48C, IOMUXC_BASE_ADDR + 0x8);
 	else
-		writel(0x201, IOMUXC_BASE_ADDR + 0x8);
+		writel(0x221, IOMUXC_BASE_ADDR + 0x8);
 }
 #endif
 
