@@ -795,6 +795,7 @@ static int setup_pmic_voltages(void)
 			return -1;
 		}
 	}
+	return 0;
 }
 #endif
 
@@ -840,26 +841,51 @@ void spi_io_init(struct imx_spi_dev_t *dev)
 
 #if defined CONFIG_MX6Q
 		/* SCLK */
-		mxc_iomux_v3_setup_pad(MX6Q_PAD_KEY_COL0__ECSPI1_SCLK);
-
-		/* MISO */
-		mxc_iomux_v3_setup_pad(MX6Q_PAD_KEY_COL1__ECSPI1_MISO);
+		mxc_iomux_v3_setup_pad(MX6Q_PAD_DISP0_DAT20__ECSPI1_SCLK);
 
 		/* MOSI */
-		mxc_iomux_v3_setup_pad(MX6Q_PAD_KEY_ROW0__ECSPI1_MOSI);
+		mxc_iomux_v3_setup_pad(MX6Q_PAD_DISP0_DAT21__ECSPI1_MOSI);
 
-		mxc_iomux_v3_setup_pad(MX6Q_PAD_KEY_ROW1__ECSPI1_SS0);
+		/* MISO */
+		mxc_iomux_v3_setup_pad(MX6Q_PAD_DISP0_DAT22__ECSPI1_MISO);
+
+		/* CS0 */
+		mxc_iomux_v3_setup_pad(MX6Q_PAD_DISP0_DAT23__ECSPI1_SS0);
 #elif defined CONFIG_MX6DL
 		/* SCLK */
-		mxc_iomux_v3_setup_pad(MX6DL_PAD_KEY_COL0__ECSPI1_SCLK);
-
-		/* MISO */
-		mxc_iomux_v3_setup_pad(MX6DL_PAD_KEY_COL1__ECSPI1_MISO);
+		mxc_iomux_v3_setup_pad(MX6DL_PAD_DISP0_DAT20__ECSPI1_SCLK);
 
 		/* MOSI */
-		mxc_iomux_v3_setup_pad(MX6DL_PAD_KEY_ROW0__ECSPI1_MOSI);
+		mxc_iomux_v3_setup_pad(MX6DL_PAD_DISP0_DAT21__ECSPI1_MOSI);
 
-		mxc_iomux_v3_setup_pad(MX6DL_PAD_KEY_ROW1__ECSPI1_SS0);
+		/* MISO */
+		mxc_iomux_v3_setup_pad(MX6DL_PAD_DISP0_DAT22__ECSPI1_MISO);
+
+		/* CS0 */
+		mxc_iomux_v3_setup_pad(MX6DL_PAD_DISP0_DAT23__ECSPI1_SS0);
+
+		/* RFID EN */
+#		define RFID_EN IMX_GPIO_NR(3, 30)
+		mxc_iomux_v3_setup_pad(MX6DL_PAD_EIM_D30__GPIO_3_30);
+		/* RFID IRQ */
+#		define RFID_IRQ IMX_GPIO_NR(3, 31)
+		mxc_iomux_v3_setup_pad(MX6DL_PAD_EIM_D31__GPIO_3_31);
+		/* RFID MOD */
+#		define RFID_MOD IMX_GPIO_NR(4, 29)
+		mxc_iomux_v3_setup_pad(MX6DL_PAD_DISP0_DAT8__GPIO_4_29);
+		/* RFID ASK OOK */
+#		define RFID_ASKOOK IMX_GPIO_NR(4, 30)
+		mxc_iomux_v3_setup_pad(MX6DL_PAD_DISP0_DAT9__GPIO_4_30);
+
+		/* pull MOD and ASK/OOK high */
+		gpio_direction_output(RFID_MOD, 1);
+		gpio_direction_output(RFID_ASKOOK, 1);
+
+		/* this really isn't necessary, as we don't field IRQs here */
+		gpio_direction_input(RFID_IRQ);
+
+		/* enable RFID */
+		gpio_direction_output(RFID_EN, 1);
 #endif
 		break;
 	case ECSPI2_BASE_ADDR:
@@ -942,6 +968,7 @@ int setup_gpmi_nand(void)
 	reg |= 0x0030;
 	writel(reg, CCM_BASE_ADDR + CLKCTL_CCGR0);
 
+	return 0;
 }
 #endif
 #endif
