@@ -2822,7 +2822,6 @@ ident_done:
 int nand_scan_ident(struct mtd_info *mtd, int maxchips)
 {
 	int i, busw, nand_maf_id;
-	int nchips = 1;
 	struct nand_chip *chip = mtd->priv;
 	struct nand_flash_dev *type;
 
@@ -2850,23 +2849,16 @@ int nand_scan_ident(struct mtd_info *mtd, int maxchips)
 		/* Send the command for reading device ID */
 		chip->cmdfunc(mtd, NAND_CMD_READID, 0x00, -1);
 		/* Read manufacturer and device IDs */
-		// @@@ WARNING!!!
-		// @@@ UIB Rev 1 workaround!!!
 		if (nand_maf_id != chip->read_byte(mtd) ||
-		    type->id != chip->read_byte(mtd)) {
-			continue;
-		}
-		else
-			nchips++;
+		    type->id != chip->read_byte(mtd))
+			break;
 	}
-#ifdef DEBUG
-	if (i > 1)
-		printk(KERN_INFO "%d NAND chips detected\n", nchips);
-#endif
+
+	printf("nand_scan_ident: %d NAND chips detected\n", i);
 
 	/* Store the number of chips and calc total size for mtd */
-	chip->numchips = nchips;
-	mtd->size = nchips * chip->chipsize;
+	chip->numchips = i;
+	mtd->size = i * chip->chipsize;
 
 	return 0;
 }
