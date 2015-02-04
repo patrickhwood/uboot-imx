@@ -274,7 +274,7 @@ static int nand_test_block(nand_info_t *nand, ulong off, int erase)
 int do_nand(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 {
 	int i, dev, ret = 0;
-	ulong addr, off;
+	ulong addr, off, len = 1;
 	size_t size;
 	char *cmd, *s;
 	nand_info_t *nand;
@@ -523,16 +523,25 @@ int do_nand(cmd_tbl_t * cmdtp, int flag, int argc, char *argv[])
 			off = 0;
 			/* note: only works for nand size < 4GB, as we can't do 64-bit divides */
 			for (i = 0; i < size / nand->erasesize; i++) {
-				ret = nand_test_block(nand, off, erase);
+				ret = nand_test_block(nand, off, 1);
 				if (ret)
 					return ret;
 				off += nand->erasesize;
 			}
 		}
 		else {
-			off = (int)simple_strtoul(argv[2], NULL, 16);
+			off = (ulong)simple_strtoul(argv[2], NULL, 16);
+			if (argc > 3)
+				len = (ulong)simple_strtoul(argv[3], NULL, 10);
+			if (len == 0)
+				len = 1;
 			off &= ~(nand->erasesize - 1);
-			ret = nand_test_block(nand, off, 1);
+			for (i = 0; i < len; i++) {
+				ret = nand_test_block(nand, off, 1);
+				if (ret)
+					return ret;
+				off += nand->erasesize;
+			}
 		}
 
 		printf("\nCompleted nand test\n");
@@ -596,10 +605,10 @@ U_BOOT_CMD(nand, CONFIG_SYS_MAXARGS, 1, do_nand,
 	"nand dump[.oob] off - dump page\n"
 	"nand scrub - really clean NAND erasing bad blocks (UNSAFE)\n"
 	"nand markbad off [...] - mark bad block(s) at offset (UNSAFE)\n"
-	"nand test [all | allerase | offset] - test nand blocks\n"
+	"nand test [all | offset [nblocks]] - test nand blocks\n"
 	"    all - test entire device (don't erase before writing)\n"
-	"    allerase - test entire device (erase each block before writing)\n"
-	"    offset - erase and test one block at offset (hex, in 256K increments)\n"
+	"    offset - erase and test one or nblocks blocks starting at offset\n"
+	"             (offset hex, in 256K increments, nblocks decimal)\n"
 	"nand biterr off - make a bit error at offset (UNSAFE)"
 #ifdef CONFIG_CMD_NAND_LOCK_UNLOCK
 	"\n"
