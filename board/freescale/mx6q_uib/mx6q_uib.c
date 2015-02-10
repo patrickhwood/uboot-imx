@@ -757,13 +757,13 @@ int i2c_bus_recovery(void)
 static int setup_pmic_voltages(void)
 {
 	unsigned char value;
+	unsigned char __attribute__((unused)) reg[32];
+	int __attribute__((unused)) i;
 
 	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
 	if (!i2c_probe(LTC3676_I2C_ADDR)) {
 		printf("Found LCT3676");
 #if 0
-		unsigned char reg[32];
-		int i;
 		for (i = 1; i <= 0x17; i++) {
 			if (i2c_read(LTC3676_I2C_ADDR, i, 1, &reg[i], 1)) {
 				printf("Read Rev ID error!\n");
@@ -786,20 +786,20 @@ static int setup_pmic_voltages(void)
 			printf("Set BUCK1 error!\n");
 			return -1;
 		}
-		/* enable BUCK2 */
-		value = (1<<7) | (1<<1);
+		/* enable BUCK2, CLK 1.25MHz, clock phase 2 */
+		value = (1<<7) | (1<<1) | (1<<2) | (1<<3);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK2, 1, &value, 1)) {
 			printf("Set BUCK1 error!\n");
 			return -1;
 		}
-		/* enable BUCK3 */
-		value = (1<<7) | (1<<1);
+		/* enable BUCK3, CLK 1.25MHz ,clock phase 2 */
+		value = (1<<7) | (1<<1) | (1<<2) | (1<<3);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK3, 1, &value, 1)) {
 			printf("Set BUCK1 error!\n");
 			return -1;
 		}
-		/* enable BUCK4 */
-		value = (1<<7) | (1<<1);
+		/* enable BUCK4, CLK 1.25MHz */
+		value = (1<<7) | (1<<1) | (1<<2);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK4, 1, &value, 1)) {
 			printf("Set BUCK1 error!\n");
 			return -1;
@@ -1950,7 +1950,7 @@ int board_late_init(void)
 #endif
 
 	gpio_set_value(EXT_LED1, 0);
-	gpio_set_value(EXT_LED2, 1);
+	gpio_set_value(EXT_LED2, 0);
 	gpio_set_value(EXT_LED3, 0);
 
 	/* PWM speaker test */
