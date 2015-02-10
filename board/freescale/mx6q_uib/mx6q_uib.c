@@ -780,8 +780,8 @@ static int setup_pmic_voltages(void)
 		mxc_iomux_v3_setup_pad(MX6DL_PAD_EIM_D16__GPIO_3_16);
 		gpio_direction_output(PMIC_STBY, 0);
 
-		/* disable BUCK1 */
-		value = 0;
+		/* disable BUCK1, CLK 1.25MHz */
+		value = (1<<2);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK1, 1, &value, 1)) {
 			printf("Set BUCK1 error!\n");
 			return -1;
