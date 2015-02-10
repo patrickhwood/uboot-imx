@@ -54,6 +54,7 @@
 
 #if CONFIG_I2C_MXC
 #include <i2c.h>
+#include "ltc3676.h"
 #endif
 
 #ifdef CONFIG_CMD_MMC
@@ -755,49 +756,90 @@ int i2c_bus_recovery(void)
 
 static int setup_pmic_voltages(void)
 {
-	unsigned char value, rev_id = 0 ;
+	unsigned char value;
+
 	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
-	if (!i2c_probe(0x8)) {
-		if (i2c_read(0x8, 0, 1, &value, 1)) {
-			printf("Read device ID error!\n");
+	if (!i2c_probe(LTC3676_I2C_ADDR)) {
+		printf("Found LCT3676");
+#if 0
+		unsigned char reg[32];
+		int i;
+		for (i = 1; i <= 0x17; i++) {
+			if (i2c_read(LTC3676_I2C_ADDR, i, 1, &reg[i], 1)) {
+				printf("Read Rev ID error!\n");
+				return -1;
+			}
+			printf(":%02x", reg[i]);
+		}
+#endif
+		printf("\n");
+
+		/* drive PMIC standby pad low */
+		/* note: this is going away in Rev 2 */
+#define PMIC_STBY IMX_GPIO_NR(3, 16)
+		mxc_iomux_v3_setup_pad(MX6DL_PAD_EIM_D16__GPIO_3_16);
+		gpio_direction_output(PMIC_STBY, 0);
+
+		/* disable BUCK1 */
+		value = 0;
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK1, 1, &value, 1)) {
+			printf("Set BUCK1 error!\n");
 			return -1;
 		}
-		if (i2c_read(0x8, 3, 1, &rev_id, 1)) {
-			printf("Read Rev ID error!\n");
+		/* enable BUCK2 */
+		value = (1<<7) | (1<<1);
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK2, 1, &value, 1)) {
+			printf("Set BUCK1 error!\n");
 			return -1;
 		}
-		printf("Found PFUZE100! deviceid=%x,revid=%x\n", value, rev_id);
-		/*For camera streaks issue,swap VGEN5 and VGEN3 to power camera.
-		*sperate VDDHIGH_IN and camera 2.8V power supply, after switch:
-		*VGEN5 for VDDHIGH_IN and increase to 3V to align with datasheet
-		*VGEN3 for camera 2.8V power supply
-		*/
-		/*increase VGEN3 from 2.5 to 2.8V*/
-		if (i2c_read(0x8, 0x6e, 1, &value, 1)) {
-			printf("Read VGEN3 error!\n");
+		/* enable BUCK3 */
+		value = (1<<7) | (1<<1);
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK3, 1, &value, 1)) {
+			printf("Set BUCK1 error!\n");
 			return -1;
 		}
-		value &= ~0xf;
-		value |= 0xa;
-		if (i2c_write(0x8, 0x6e, 1, &value, 1)) {
-			printf("Set VGEN3 error!\n");
+		/* enable BUCK4 */
+		value = (1<<7) | (1<<1);
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK4, 1, &value, 1)) {
+			printf("Set BUCK1 error!\n");
 			return -1;
 		}
-		/*increase VGEN5 from 2.8 to 3V*/
-		if (i2c_read(0x8, 0x70, 1, &value, 1)) {
-			printf("Read VGEN5 error!\n");
+
+		/* enable LDO2 */
+		value = (1<<2);
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_LDOA, 1, &value, 1)) {
+			printf("Set BUCK1 error!\n");
 			return -1;
 		}
-		value &= ~0xf;
-		value |= 0xc;
-		if (i2c_write(0x8, 0x70, 1, &value, 1)) {
-			printf("Set VGEN5 error!\n");
+		/* enable LDO4 */
+		value = (1<<2) | (1<<0);
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_LDOB, 1, &value, 1)) {
+			printf("Set BUCK1 error!\n");
 			return -1;
 		}
+
+		/* disable pin control */
+		/* this should shut down the above regulators */
+		value = 1<<5;
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_CNTRL, 1, &value, 1)) {
+			printf("Set CNTRL error!\n");
+			return -1;
+		}
+
+#if 0
+		for (i = 1; i <= 0x17; i++) {
+			if (i2c_read(LTC3676_I2C_ADDR, i, 1, &reg[i], 1)) {
+				printf("Read Rev ID error!\n");
+				return -1;
+			}
+			printf(":%02x", reg[i]);
+		}
+		printf("\n");
+#endif
 	}
 	return 0;
 }
-#endif
+#endif /* CONFIG_I2C_MXC */
 
 #ifdef CONFIG_IMX_ECSPI
 s32 spi_get_cfg(struct imx_spi_dev_t *dev)
@@ -1898,6 +1940,7 @@ int board_late_init(void)
 		break;
 	}
 #endif
+
 #ifdef CONFIG_I2C_MXC
 	setup_i2c(CONFIG_SYS_I2C_PORT);
 	i2c_bus_recovery();
@@ -1905,9 +1948,15 @@ int board_late_init(void)
 	if (ret)
 		return -1;
 #endif
+
 	gpio_set_value(EXT_LED1, 0);
 	gpio_set_value(EXT_LED2, 1);
 	gpio_set_value(EXT_LED3, 0);
+
+	/* PWM speaker test */
+	imx_pwm_config(pwm3, 0, 1000000);
+	imx_pwm_enable(pwm3);
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_SD4_DAT1__PWM3_PWMO));
 	return 0;
 }
 
@@ -2029,13 +2078,8 @@ void enet_board_init(void)
 	reg = readl(GPIO1_BASE_ADDR + 0x0);
 	reg |= 0x2000000;
 	writel(reg, GPIO1_BASE_ADDR + 0x0);
-
-	/* PWM speaker test */
-	imx_pwm_config(pwm3, 0, 1000000);
-	imx_pwm_enable(pwm3);
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_SD4_DAT1__PWM3_PWMO));
 }
-#endif
+#endif /* CONFIG_MXC_FEC */
 
 int checkboard(void)
 {

@@ -33,8 +33,13 @@
 	#define CONFIG_SYS_I2C_PORT             I2C2_BASE_ADDR
 	#undef CONFIG_SYS_I2C_SLAVE
 	#define CONFIG_SYS_I2C_SLAVE            0x0
+	#undef CONFIG_I2C_MXC
+	#define CONFIG_I2C_MXC	1
 #endif
 
+#undef CONFIG_MXC_FEC
+#undef CONFIG_CMD_NET
+#undef CONFIG_NET_MULTI
 
 #define CONFIG_MX6Q_UIB
 #define CONFIG_USB_DEVICE
