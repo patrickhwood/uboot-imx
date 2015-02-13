@@ -1031,9 +1031,9 @@ int board_eth_init(bd_t *bis)
  * Last element in struct is used to indicate 1.8V support.
  */
 struct fsl_esdhc_cfg usdhc_cfg[4] = {
-	{USDHC1_BASE_ADDR, 1, 1, 1, 0},
-	{USDHC2_BASE_ADDR, 1, 1, 1, 0},
 	{USDHC3_BASE_ADDR, 1, 1, 1, 0},
+	{USDHC2_BASE_ADDR, 1, 1, 1, 0},
+	{USDHC1_BASE_ADDR, 1, 1, 1, 0},
 	{USDHC4_BASE_ADDR, 1, 1, 1, 0},
 };
 
@@ -1148,9 +1148,9 @@ int usdhc_gpio_init(bd_t *bis)
 		++index) {
 		switch (index) {
 		case 0:
-			mxc_iomux_v3_setup_multiple_pads(usdhc1_pads,
-				sizeof(usdhc1_pads) /
-				sizeof(usdhc1_pads[0]));
+			mxc_iomux_v3_setup_multiple_pads(usdhc3_pads,
+				sizeof(usdhc3_pads) /
+				sizeof(usdhc3_pads[0]));
 			break;
 		case 1:
 			mxc_iomux_v3_setup_multiple_pads(usdhc2_pads,
@@ -1158,9 +1158,9 @@ int usdhc_gpio_init(bd_t *bis)
 				sizeof(usdhc2_pads[0]));
 			break;
 		case 2:
-			mxc_iomux_v3_setup_multiple_pads(usdhc3_pads,
-				sizeof(usdhc3_pads) /
-				sizeof(usdhc3_pads[0]));
+			mxc_iomux_v3_setup_multiple_pads(usdhc1_pads,
+				sizeof(usdhc1_pads) /
+				sizeof(usdhc1_pads[0]));
 			break;
 		case 3:
 			mxc_iomux_v3_setup_multiple_pads(usdhc4_pads,
