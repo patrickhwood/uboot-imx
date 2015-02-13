@@ -1953,10 +1953,12 @@ int board_late_init(void)
 	gpio_set_value(EXT_LED2, 0);
 	gpio_set_value(EXT_LED3, 0);
 
+#ifdef CONFIG_LCD
 	/* PWM speaker test */
 	imx_pwm_config(pwm3, 0, 1000000);
 	imx_pwm_enable(pwm3);
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_SD4_DAT1__PWM3_PWMO));
+#endif
 	return 0;
 }
 
