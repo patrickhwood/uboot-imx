@@ -2085,7 +2085,7 @@ void enet_board_init(void)
 
 int checkboard(void)
 {
-	printf("Board: %s-SABRESD: %s Board: 0x%x [",
+	printf("Board: %s-UIB: %s Board: 0x%x [",
 	mx6_chip_name(),
 	mx6_board_rev_name(),
 	fsl_system_rev);
