@@ -2155,12 +2155,13 @@ void udc_pins_setting(void)
 {
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_ENET_RX_ER__ANATOP_USBOTG_ID));
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D22__GPIO_3_22));
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_ENET_TXD1__GPIO_1_29));
 
 	/* USB_OTG_PWR = 0 */
 	gpio_direction_output(USB_OTG_PWR, 0);
 	/* USB_H1_POWER = 1 */
-	gpio_direction_output(USB_H1_POWER, 1);
+	/* @@@ disable USB Host 1 on Rev 1 board
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_ENET_TXD1__GPIO_1_29));
+	gpio_direction_output(USB_H1_POWER, 1); */
 
 	mxc_iomux_set_gpr_register(1, 13, 1, 0);
 
