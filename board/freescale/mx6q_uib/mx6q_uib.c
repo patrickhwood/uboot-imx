@@ -789,32 +789,32 @@ static int setup_pmic_voltages(void)
 		/* enable BUCK2, CLK 1.25MHz, clock phase 2 */
 		value = (1<<7) | (1<<1) | (1<<2) | (1<<3);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK2, 1, &value, 1)) {
-			printf("Set BUCK1 error!\n");
+			printf("Set BUCK2 error!\n");
 			return -1;
 		}
 		/* enable BUCK3, CLK 1.25MHz ,clock phase 2 */
 		value = (1<<7) | (1<<1) | (1<<2) | (1<<3);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK3, 1, &value, 1)) {
-			printf("Set BUCK1 error!\n");
+			printf("Set BUCK3 error!\n");
 			return -1;
 		}
 		/* enable BUCK4, CLK 1.25MHz */
 		value = (1<<7) | (1<<1) | (1<<2);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK4, 1, &value, 1)) {
-			printf("Set BUCK1 error!\n");
+			printf("Set BUCK4 error!\n");
 			return -1;
 		}
 
 		/* enable LDO2 */
 		value = (1<<2);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_LDOA, 1, &value, 1)) {
-			printf("Set BUCK1 error!\n");
+			printf("Set LDO2 error!\n");
 			return -1;
 		}
 		/* enable LDO4 */
 		value = (1<<2) | (1<<0);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_LDOB, 1, &value, 1)) {
-			printf("Set BUCK1 error!\n");
+			printf("Set LDO4 error!\n");
 			return -1;
 		}
 
