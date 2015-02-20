@@ -32,6 +32,11 @@
 #undef CONFIG_CMD_NET
 #undef CONFIG_NET_MULTI
 
+#define CONFIG_MX6DL_UIB
+
+#define CONFIG_SYS_HUSH_PARSER          1
+#define CONFIG_SYS_PROMPT_HUSH_PS2      "> "
+
 #define CONFIG_I2C_MXC                  1
 #ifdef CONFIG_I2C_MXC
 	#undef CONFIG_CMD_I2C
@@ -51,8 +56,6 @@
 	#undef CONFIG_SYS_I2C_SPEED
 	#undef CONFIG_HARD_I2C
 #endif
-
-#define CONFIG_MX6DL_UIB
 
 #define CONFIG_USB_DEVICE
 #ifdef CONFIG_USB_DEVICE
@@ -74,7 +77,6 @@
 	#define CONFIG_FASTBOOT_TRANSFER_BUF	0x2c000000
 	#define CONFIG_FASTBOOT_TRANSFER_BUF_SIZE 0x20000000 /* 512M byte */
 #endif
-
 
 #define CONFIG_CMD_BOOTI
 #define CONFIG_ANDROID_RECOVERY
@@ -152,7 +154,9 @@
 		"bootcmd_emmc=run bootargs_base; "   								\
 		"setenv bootargs ${bootargs} androidboot.rootdevice=emmc; " 		\
 		"booti mmc0\0"														\
-		"bootcmd=run bootcmd_mmc\0"                             			\
+		"bootcmd=mmc dev 1; if mmc read 11000000 0 1; "						\
+		"  then run bootcmd_mmc; "											\
+		"  else run bootcmd_emmc; fi\0"										\
 		"fastboot_dev=mmc0\0"												\
 		"splashimage=0x30000000\0"											\
 		"splashpos=m,m\0"													\
