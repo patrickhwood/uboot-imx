@@ -25,14 +25,15 @@
 #include <asm/arch/mx6.h>
 #include "mx6dl_sabresd.h"
 
+#define CONFIG_MX6DL_UIB
+#define CONFIG_MX6DL_UIB_REV_1
+
 #undef PHYS_SDRAM_1_SIZE
 #define PHYS_SDRAM_1_SIZE	(2u * 1024 * 1024 * 1024)
 
 #undef CONFIG_MXC_FEC
 #undef CONFIG_CMD_NET
 #undef CONFIG_NET_MULTI
-
-#define CONFIG_MX6DL_UIB
 
 #define CONFIG_SYS_HUSH_PARSER          1
 #define CONFIG_SYS_PROMPT_HUSH_PS2      "> "

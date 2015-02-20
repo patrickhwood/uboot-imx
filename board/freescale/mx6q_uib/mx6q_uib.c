@@ -774,11 +774,13 @@ static int setup_pmic_voltages(void)
 #endif
 		printf("\n");
 
+#ifdef CONFIG_MX6DL_UIB_REV_1
 		/* drive PMIC standby pad low */
 		/* note: this is going away in Rev 2 */
 #define PMIC_STBY IMX_GPIO_NR(3, 16)
 		mxc_iomux_v3_setup_pad(MX6DL_PAD_EIM_D16__GPIO_3_16);
 		gpio_direction_output(PMIC_STBY, 0);
+#endif
 
 		/* disable BUCK1, CLK 1.25MHz */
 		value = (1<<2);
