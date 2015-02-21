@@ -92,7 +92,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 static enum boot_device boot_dev;
 
-#define USB_OTG_PWR IMX_GPIO_NR(3, 22)
+#define USB_OTG_PWR_N IMX_GPIO_NR(3, 22)
 #define USB_H1_POWER IMX_GPIO_NR(1, 29)
 
 #define TOUCH_RST_N IMX_GPIO_NR(3, 24)
@@ -820,6 +820,8 @@ static int setup_pmic_voltages(void)
 			return -1;
 		}
 
+#if 0
+		/* doing this causes the USB hub to run amok and draw lots of power */
 		/* disable pin control */
 		/* this should shut down the above regulators */
 		value = 1<<5;
@@ -827,6 +829,7 @@ static int setup_pmic_voltages(void)
 			printf("Set CNTRL error!\n");
 			return -1;
 		}
+#endif
 
 #if 0
 		for (i = 1; i <= 0x17; i++) {
@@ -2155,17 +2158,22 @@ int checkboard(void)
 
 void udc_pins_setting(void)
 {
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_ENET_RX_ER__ANATOP_USBOTG_ID));
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D22__GPIO_3_22));
 
-	/* USB_OTG_PWR = 0 */
-	gpio_direction_output(USB_OTG_PWR, 0);
+	/* disable USB OTG power */
+	gpio_direction_output(USB_OTG_PWR_N, 1);
+
+#ifndef CONFIG_MX6DL_UIB_REV_1
 	/* USB_H1_POWER = 1 */
-	/* @@@ disable USB Host 1 on Rev 1 board
+	/* don't use USB Host 1 on Rev 1 board
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_ENET_TXD1__GPIO_1_29));
 	gpio_direction_output(USB_H1_POWER, 1); */
+#endif
 
-	mxc_iomux_set_gpr_register(1, 13, 1, 0);
-
+#if 0
+	/* No OTG mode on UIB */
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_ENET_RX_ER__ANATOP_USBOTG_ID));
+	mxc_iomux_set_gpr_register(1, 13, 1, 1);
+#endif
 }
 #endif
