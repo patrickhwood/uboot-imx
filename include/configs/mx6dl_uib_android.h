@@ -31,9 +31,13 @@
 #undef PHYS_SDRAM_1_SIZE
 #define PHYS_SDRAM_1_SIZE	(2u * 1024 * 1024 * 1024)
 
+#define CONFIG_ENV_IS_EMBEDDED
+#define ENV_IS_EMBEDDED
+
 #undef CONFIG_MXC_FEC
 #undef CONFIG_CMD_NET
 #undef CONFIG_NET_MULTI
+#undef CONFIG_IPADDR
 
 #define CONFIG_SYS_HUSH_PARSER          1
 #define CONFIG_SYS_PROMPT_HUSH_PS2      "> "
@@ -149,16 +153,15 @@
 		"video=mxcfb1:off video=mxcfb2:off "								\
 		"log_buf_len=64K vmalloc=400M androidboot.console=ttymxc0 "			\
 		"androidboot.hardware=freescale androidboot.serialno=0a01234567890abc\0" \
-		"bootcmd_mmc=run bootargs_base; "									\
+		"bootcmd_sd=run bootargs_base; "									\
 		"setenv bootargs ${bootargs} androidboot.rootdevice=sd; " 			\
 		"booti mmc1\0"														\
 		"bootcmd_emmc=run bootargs_base; "   								\
 		"setenv bootargs ${bootargs} androidboot.rootdevice=emmc; " 		\
 		"booti mmc0\0"														\
-		"bootcmd=mmc dev 1; if mmc read 11000000 0 1; "						\
-		"  then run bootcmd_mmc; "											\
+		"bootcmd=if test ${bootdev} = mmc1; "						\
+		"  then run bootcmd_sd; "											\
 		"  else run bootcmd_emmc; fi\0"										\
-		"fastboot_dev=mmc0\0"												\
 		"splashimage=0x30000000\0"											\
 		"splashpos=m,m\0"													\
 		"lvds_num=0\0"														\
