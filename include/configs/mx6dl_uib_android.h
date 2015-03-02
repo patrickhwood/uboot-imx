@@ -141,29 +141,13 @@
 #undef CONFIG_EXTRA_ENV_SETTINGS
 #undef CONFIG_BOOTDELAY
 
-#define CONFIG_BOOTDELAY 1
+#define CONFIG_BOOTDELAY 0
 #define CONFIG_LOADADDR		0x10800000	/* loadaddr env var */
 #define CONFIG_RD_LOADADDR      0x11000000
 
 #define CONFIG_INITRD_TAG
 #define	CONFIG_EXTRA_ENV_SETTINGS											\
-		"bootargs_base=setenv bootargs console=ttymxc0,115200 init=/init "	\
-		"video=mxcfb0:dev=ldb,LDB-WSVGA,bpp=32,if=RGB24 ldb=sin0 "			\
-		"video=mxcfb1:off video=mxcfb2:off "								\
-		"log_buf_len=64K vmalloc=400M androidboot.console=ttymxc0 "			\
-		"androidboot.hardware=freescale androidboot.serialno=0a01234567890abc\0" \
-		"bootcmd_sd=run bootargs_base; "									\
-		"setenv bootargs ${bootargs} androidboot.rootdevice=sd; " 			\
-		"booti mmc1\0"														\
-		"bootcmd_emmc=run bootargs_base; "   								\
-		"setenv bootargs ${bootargs} androidboot.rootdevice=emmc; " 		\
-		"booti mmc0\0"														\
-		"bootcmd=if test ${bootdev} = mmc1; "						\
-		"  then run bootcmd_sd; "											\
-		"  else run bootcmd_emmc; fi\0"										\
-		"splashimage=0x30000000\0"											\
-		"splashpos=m,m\0"													\
-		"lvds_num=0\0"														\
-
+		"bootcmd=setenv bootargs console=ttymxc0,115200 init=/init mem=256M;"	\
+		"booti 10000000"													\
 
 #endif
