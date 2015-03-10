@@ -782,7 +782,7 @@ static int setup_pmic_voltages(void)
 		gpio_direction_output(PMIC_STBY, 0);
 #endif
 
-		/* disable BUCK1, CLK 1.25MHz */
+		/* enable BUCK1, CLK 1.25MHz */
 		value = (1<<2);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK1, 1, &value, 1)) {
 			printf("Set BUCK1 error!\n");
@@ -817,6 +817,25 @@ static int setup_pmic_voltages(void)
 		value = (1<<2) | (1<<0);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_LDOB, 1, &value, 1)) {
 			printf("Set LDO4 error!\n");
+			return -1;
+		}
+
+		/* Set ARM/SOC voltage to 1.35v */
+		value = 0x19;
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_DVB4A, 1, &value, 1)) {
+			printf("Set BUCK4 error!\n");
+			return -1;
+		}
+
+#ifdef CONFIG_MX6DL_UIB_REV_1
+		/* Set ARM/SOC standby voltage to 1.05v */
+		value = 0x0c;
+#else
+		/* Set ARM/SOC standby voltage to 0.9v */
+		value = 0x06;
+#endif
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_DVB4B, 1, &value, 1)) {
+			printf("Set BUCK4 error!\n");
 			return -1;
 		}
 
