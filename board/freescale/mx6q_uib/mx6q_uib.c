@@ -1935,12 +1935,19 @@ int check_recovery_cmd_file(void)
 
 int board_late_init(void)
 {
+	struct mmc *mmc = find_mmc_device(1);	// SD card
 	int ret = 0;
+
 	switch (get_boot_device()) {
 	case SD_BOOT:
-		setenv("fastboot_dev", "mmc1");
-		setenv("bootdev", "mmc1");
-		break;
+		if(!mmc_init(mmc)) {
+			setenv("fastboot_dev", "mmc1");
+			setenv("bootdev", "mmc1");
+			break;
+		}
+		else {
+			puts("SD card init failed; fail over to eMMC\n");
+		}
 	case MMC_BOOT:
 		setenv("fastboot_dev", "mmc0");
 		setenv("bootdev", "mmc0");
