@@ -151,7 +151,8 @@
 #define CONFIG_INITRD_TAG
 #define	CONFIG_EXTRA_ENV_SETTINGS											\
 		"bootcmd=setenv bootargs console=ttymxc0,115200 init=/init mem=256M;"	\
-		"booti 10000000\0"													\
+		"booti 10000000;"													\
+		"fastboot\0"													\
 		"splashimage=0x30000000\0"
 
 #endif
