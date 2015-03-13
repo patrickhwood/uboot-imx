@@ -34,6 +34,9 @@
 #undef CONFIG_ENV_IS_IN_MMC
 #define CONFIG_ENV_IS_NOWHERE
 
+#define CONFIG_VIDEO_BMP_GZIP
+#define CONFIG_SYS_VIDEO_LOGO_MAX_SIZE 640000
+
 #undef CONFIG_MXC_FEC
 #undef CONFIG_CMD_NET
 #undef CONFIG_NET_MULTI
@@ -148,6 +151,7 @@
 #define CONFIG_INITRD_TAG
 #define	CONFIG_EXTRA_ENV_SETTINGS											\
 		"bootcmd=setenv bootargs console=ttymxc0,115200 init=/init mem=256M;"	\
-		"booti 10000000"													\
+		"booti 10000000\0"													\
+		"splashimage=0x30000000\0"
 
 #endif
