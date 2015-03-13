@@ -851,21 +851,12 @@ s32 spi_get_cfg(struct imx_spi_dev_t *dev)
 {
 	switch (dev->slave.cs) {
 	case 0:
-		/* SPI-NOR */
+		/* RFID */
 		dev->base = ECSPI1_BASE_ADDR;
-		dev->freq = 25000000;
+		dev->freq = 2000000;
 		dev->ss_pol = IMX_SPI_ACTIVE_LOW;
 		dev->ss = 0;
-		dev->fifo_sz = 64 * 4;
-		dev->us_delay = 0;
-		break;
-	case 1:
-		/* SPI-NOR */
-		dev->base = ECSPI1_BASE_ADDR;
-		dev->freq = 25000000;
-		dev->ss_pol = IMX_SPI_ACTIVE_LOW;
-		dev->ss = 1;
-		dev->fifo_sz = 64 * 4;
+		dev->fifo_sz = 64 * 2;
 		dev->us_delay = 0;
 		break;
 	default:
