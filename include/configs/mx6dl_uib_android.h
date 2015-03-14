@@ -151,9 +151,14 @@
 
 #define CONFIG_INITRD_TAG
 #define	CONFIG_EXTRA_ENV_SETTINGS											\
-		"bootcmd=setenv bootargs console=ttymxc0,115200 init=/init mem=256M;"	\
+		"bootcmd=setenv bootargs console=ttymxc0,115200 init=/init "		\
+		"video=mxcfb0:dev=ldb,LDB-WSVGA,bpp=32,if=RGB24 ldb=sin0 "			\
+		"video=mxcfb1:off video=mxcfb2:off;"								\
 		"booti 10000000;"													\
-		"fastboot\0"													\
+		"fastboot\0"														\
+		"lvds_num=0\0"														\
+		"splashpos=m,m\0"													\
 		"splashimage=0x30000000\0"
 
 #endif
+
