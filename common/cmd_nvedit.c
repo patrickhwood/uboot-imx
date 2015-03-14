@@ -568,14 +568,17 @@ int getenv_r (char *name, char *buf, unsigned len)
 	return (-1);
 }
 
-#if defined(CONFIG_CMD_SAVEENV) && !defined(CONFIG_ENV_IS_NOWHERE)
 int do_saveenv (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
+#if defined(CONFIG_CMD_SAVEENV) && !defined(CONFIG_ENV_IS_NOWHERE)
 	extern char * env_name_spec;
 
 	printf ("Saving Environment to %s...\n", env_name_spec);
 
 	return (saveenv() ? 1 : 0);
+#else
+	return 0;
+#endif
 }
 
 U_BOOT_CMD(
@@ -583,8 +586,6 @@ U_BOOT_CMD(
 	"save environment variables to persistent storage",
 	""
 );
-
-#endif
 
 
 /************************************************************************
