@@ -156,13 +156,14 @@
 		"video=mxcfb1:off video=mxcfb2:off "								\
 		"log_buf_len=64K vmalloc=400M androidboot.console=ttymxc0 "			\
 		"androidboot.hardware=freescale androidboot.serialno=0a01234567890abc\0" \
-		"bootcmd_sd=run bootargs_base; "									\
+		"bootcmd_sd=mmc dev 1;"												\
 		"setenv bootargs ${bootargs} androidboot.rootdevice=sd; " 			\
 		"booti mmc1\0"														\
-		"bootcmd_emmc=run bootargs_base; "   								\
+		"bootcmd_emmc=mmc dev 0;"											\
 		"setenv bootargs ${bootargs} androidboot.rootdevice=emmc; " 		\
 		"booti mmc0\0"														\
-		"bootcmd=if test ${bootdev} = mmc1; "						\
+		"bootcmd=run bootargs_base; "										\
+		"if test ${bootdev} = mmc1; "						\
 		"  then run bootcmd_sd; "											\
 		"  else run bootcmd_emmc; fi\0"										\
 		"splashimage=0x30000000\0"											\
