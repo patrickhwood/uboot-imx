@@ -131,9 +131,9 @@ d_inv_loop:
 
 	/* Restore the default values in the Gate registers */
 	ldr r0, CCM_BASE_ADDR_W
-	ldr r1, =0xC0003F
+	ldr r1, =0x00000F
 	str r1, [r0, #CLKCTL_CCGR0]
-	ldr r1, =0x30FC00
+	ldr r1, =0x30F000
 	str r1, [r0, #CLKCTL_CCGR1]
 	ldr r1, =0xFFFC000
 	str r1, [r0, #CLKCTL_CCGR2]
