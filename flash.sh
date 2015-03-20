@@ -1,10 +1,14 @@
 #!/bin/bash
-
-# for Windows, run MfgTool instead in background as it won't exit
-# MfgTool2.exe -noui -c UIB -l UIB-uboot &
+export PATH=$PATH:.
 
 # force board into fastboot mode
-imx_usb u-boot.bin
+if [ "$OS" = Windows_NT ]
+then
+	# for Windows, run sb_loader
+	sb_loader.exe -f u-boot-fb.bin
+else
+	imx_usb u-boot-fb.bin
+fi
 
 echo fastboot boot format-${1-emmc}.img
 fastboot boot format-${1-emmc}.img
@@ -14,7 +18,12 @@ sleep 30
 # (remove for production boards)
 if [ -z "$1" -o "$1" = emmc ]
 then
-	imx_usb u-boot.bin
+	if [ "$OS" = Windows_NT ]
+	then
+		sb_loader.exe -f u-boot-fb.bin
+	else
+		imx_usb u-boot-fb.bin
+	fi
 fi
 
 fastboot update update.zip
