@@ -92,14 +92,13 @@ DECLARE_GLOBAL_DATA_PTR;
 
 static enum boot_device boot_dev;
 
-#define USB_OTG_PWR_N IMX_GPIO_NR(3, 22)
-#define USB_H1_POWER IMX_GPIO_NR(1, 29)
-
 #define TOUCH_RST_N IMX_GPIO_NR(3, 24)
 #define LVDS0_LED_EN IMX_GPIO_NR(7, 12)
 #define LVDS0_AVDD_PG_N IMX_GPIO_NR(3, 19)
 
 #ifdef CONFIG_MX6DL_UIB_REV_1
+ #define USB_OTG_PWR_N IMX_GPIO_NR(3, 22)
+ #define USB_H1_POWER IMX_GPIO_NR(1, 29)
  #define LCD_CNTRL_VGH IMX_GPIO_NR(2, 10)
 #else
  #define LCD_PWR_EN IMX_GPIO_NR(3, 20)
