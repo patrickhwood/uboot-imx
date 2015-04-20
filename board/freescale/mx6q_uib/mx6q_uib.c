@@ -836,10 +836,10 @@ static int setup_pmic_voltages(void)
 
 #ifdef CONFIG_MX6DL_UIB_REV_1
 		/* Set ARM/SOC standby voltage to 1.05v */
-		// value = 0x0c;
+		value = 0x0c;
 #else
 		/* Set ARM/SOC standby voltage to 0.9v */
-		// value = 0x06;
+		value = 0x06;
 #endif
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_DVB4B, 1, &value, 1)) {
 			printf("Set BUCK4 error!\n");
