@@ -1597,19 +1597,6 @@ void lcd_enable(void)
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_17__GPIO_7_12));
 	gpio_direction_output(LVDS0_LED_EN, 1);
 
-#ifdef CONFIG_MX6DL_UIB_REV_1
-	/* LVDS CNTRL_VGH */
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_SD4_DAT2__GPIO_2_10));
-	gpio_direction_output(LCD_CNTRL_VGH, 1);
-#else
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D20__GPIO_3_20));
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D25__GPIO_3_25));
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D27__GPIO_3_27));
-	gpio_direction_output(LCD_PWR_EN, 1);
-	gpio_direction_output(LCD_STBYB, 1);
-	gpio_direction_output(LCD_RESET, 1);
-#endif
-
 #if defined CONFIG_MX6Q
 	/*
 	 * Align IPU1 HSP clock and IPU1 DIx pixel clock
@@ -1856,6 +1843,23 @@ int board_init(void)
 	gpio_direction_output(EXT_LED1, 1);
 	gpio_direction_output(EXT_LED2, 0);
 	gpio_direction_output(EXT_LED3, 0);
+
+	/* do these now so the LCD blanks as early as possible */
+#ifdef CONFIG_MX6DL_UIB_REV_1
+	/* LVDS CNTRL_VGH */
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_SD4_DAT2__GPIO_2_10));
+	gpio_direction_output(LCD_CNTRL_VGH, 1);
+#else
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D20__GPIO_3_20));
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D25__GPIO_3_25));
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D27__GPIO_3_27));
+	gpio_direction_output(LCD_PWR_EN, 1);
+	gpio_direction_output(LCD_STBYB, 1);
+	/* toggle LCD RESET line */
+	gpio_direction_output(LCD_RESET, 0);
+	udelay(1000);
+	gpio_set_value(LCD_RESET, 1);
+#endif
 
 	setup_boot_device();
 	fsl_set_system_rev();
