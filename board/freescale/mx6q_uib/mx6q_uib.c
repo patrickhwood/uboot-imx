@@ -104,6 +104,7 @@ static enum boot_device boot_dev;
  #define LCD_PWR_EN IMX_GPIO_NR(3, 20)
  #define LCD_STBYB IMX_GPIO_NR(3, 25)
  #define LCD_RESET IMX_GPIO_NR(3, 27)
+ #define RECOVERY_BOOT_LATCH IMX_GPIO_NR(3, 16)
 #endif
 
 #define EXT_LED0 IMX_GPIO_NR(1, 2)
@@ -132,10 +133,12 @@ static struct pwm_device pwm1 = {
 	.pwmo_invert = 0,
 };
 
+#ifdef CONFIG_MX6DL_UIB_REV_1
 static struct pwm_device pwm3 = {
 	.pwm_id = 2,		/* maps to IMX IOMUX PAD PWM3_PWMO */
 	.pwmo_invert = 0,
 };
+#endif
 
 static int di = 0;
 
@@ -1859,6 +1862,12 @@ int board_init(void)
 	gpio_direction_output(LCD_RESET, 0);
 	udelay(1000);
 	gpio_set_value(LCD_RESET, 1);
+
+	/* clear recovery boot latch */
+	mxc_iomux_v3_setup_pad(MX6DL_PAD_EIM_D16__GPIO_3_16);
+	gpio_direction_output(RECOVERY_BOOT_LATCH, 0);
+	udelay(100);
+	gpio_direction_output(RECOVERY_BOOT_LATCH, 1);
 #endif
 
 	setup_boot_device();
@@ -1926,6 +1935,9 @@ int board_late_init(void)
 {
 	struct mmc *mmc = find_mmc_device(1);	// SD card
 	int ret = 0;
+	uint soc_sbmr2 = readl(SRC_BASE_ADDR + 0x1C);
+
+	printf("boot mode: %d\n", (soc_sbmr2 >> 24) & 3);
 
 	switch (get_boot_device()) {
 	case SD_BOOT:
