@@ -92,14 +92,21 @@ DECLARE_GLOBAL_DATA_PTR;
 
 static enum boot_device boot_dev;
 
-#define USB_OTG_PWR_N IMX_GPIO_NR(3, 22)
-#define USB_H1_POWER IMX_GPIO_NR(1, 29)
-
 #define TOUCH_RST_N IMX_GPIO_NR(3, 24)
-#define LVDS0_EN IMX_GPIO_NR(7, 12)
+#define LVDS0_LED_EN IMX_GPIO_NR(7, 12)
 #define LVDS0_AVDD_PG_N IMX_GPIO_NR(3, 19)
-#define LCD_CNTRL_VGH IMX_GPIO_NR(2, 10)
 
+#ifdef CONFIG_MX6DL_UIB_REV_1
+ #define USB_OTG_PWR_N IMX_GPIO_NR(3, 22)
+ #define USB_H1_POWER IMX_GPIO_NR(1, 29)
+ #define LCD_CNTRL_VGH IMX_GPIO_NR(2, 10)
+#else
+ #define LCD_PWR_EN IMX_GPIO_NR(3, 20)
+ #define LCD_STBYB IMX_GPIO_NR(3, 25)
+ #define LCD_RESET IMX_GPIO_NR(3, 27)
+#endif
+
+#define EXT_LED0 IMX_GPIO_NR(1, 2)
 #define EXT_LED1 IMX_GPIO_NR(1, 5)
 #define EXT_LED2 IMX_GPIO_NR(1, 7)
 #define EXT_LED3 IMX_GPIO_NR(1, 8)
@@ -782,7 +789,7 @@ static int setup_pmic_voltages(void)
 		gpio_direction_output(PMIC_STBY, 0);
 #endif
 
-		/* disable BUCK1, CLK 1.25MHz */
+		/* enable BUCK1, CLK 1.25MHz */
 		value = (1<<2);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK1, 1, &value, 1)) {
 			printf("Set BUCK1 error!\n");
@@ -817,6 +824,25 @@ static int setup_pmic_voltages(void)
 		value = (1<<2) | (1<<0);
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_LDOB, 1, &value, 1)) {
 			printf("Set LDO4 error!\n");
+			return -1;
+		}
+
+		/* Set ARM/SOC voltage to 1.35v */
+		value = 0x19;
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_DVB4A, 1, &value, 1)) {
+			printf("Set BUCK4 error!\n");
+			return -1;
+		}
+
+#ifdef CONFIG_MX6DL_UIB_REV_1
+		/* Set ARM/SOC standby voltage to 1.05v */
+		// value = 0x0c;
+#else
+		/* Set ARM/SOC standby voltage to 0.9v */
+		// value = 0x06;
+#endif
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_DVB4B, 1, &value, 1)) {
+			printf("Set BUCK4 error!\n");
 			return -1;
 		}
 
@@ -1065,18 +1091,6 @@ iomux_v3_cfg_t usdhc3_pads[] = {
 	MX6Q_PAD_SD3_DAT7__USDHC3_DAT7,
 };
 
-iomux_v3_cfg_t usdhc4_pads[] = {
-	MX6Q_PAD_SD4_CLK__USDHC4_CLK,
-	MX6Q_PAD_SD4_CMD__USDHC4_CMD,
-	MX6Q_PAD_SD4_DAT0__USDHC4_DAT0,
-	MX6Q_PAD_SD4_DAT1__USDHC4_DAT1,
-	MX6Q_PAD_SD4_DAT2__USDHC4_DAT2,
-	MX6Q_PAD_SD4_DAT3__USDHC4_DAT3,
-	MX6Q_PAD_SD4_DAT4__USDHC4_DAT4,
-	MX6Q_PAD_SD4_DAT5__USDHC4_DAT5,
-	MX6Q_PAD_SD4_DAT6__USDHC4_DAT6,
-	MX6Q_PAD_SD4_DAT7__USDHC4_DAT7,
-};
 #elif defined CONFIG_MX6DL
 iomux_v3_cfg_t usdhc1_pads[] = {
 	MX6DL_PAD_SD1_CLK__USDHC1_CLK,
@@ -1109,18 +1123,6 @@ iomux_v3_cfg_t usdhc3_pads[] = {
 	MX6DL_PAD_SD3_DAT7__USDHC3_DAT7,
 };
 
-iomux_v3_cfg_t usdhc4_pads[] = {
-	MX6DL_PAD_SD4_CLK__USDHC4_CLK,
-	MX6DL_PAD_SD4_CMD__USDHC4_CMD,
-	MX6DL_PAD_SD4_DAT0__USDHC4_DAT0,
-	MX6DL_PAD_SD4_DAT1__USDHC4_DAT1,
-	MX6DL_PAD_SD4_DAT2__USDHC4_DAT2,
-	MX6DL_PAD_SD4_DAT3__USDHC4_DAT3,
-	MX6DL_PAD_SD4_DAT4__USDHC4_DAT4,
-	MX6DL_PAD_SD4_DAT5__USDHC4_DAT5,
-	MX6DL_PAD_SD4_DAT6__USDHC4_DAT6,
-	MX6DL_PAD_SD4_DAT7__USDHC4_DAT7,
-};
 #endif
 
 #define USDHC_PAD_CTRL_DEFAULT (PAD_CTL_PKE | PAD_CTL_PUE |		\
@@ -1157,11 +1159,6 @@ int usdhc_gpio_init(bd_t *bis)
 			mxc_iomux_v3_setup_multiple_pads(usdhc1_pads,
 				sizeof(usdhc1_pads) /
 				sizeof(usdhc1_pads[0]));
-			break;
-		case 3:
-			mxc_iomux_v3_setup_multiple_pads(usdhc4_pads,
-				sizeof(usdhc4_pads) /
-				sizeof(usdhc4_pads[0]));
 			break;
 		default:
 			printf("Warning: you configured more USDHC controllers"
@@ -1216,10 +1213,6 @@ int board_mmc_io_switch(u32 index, u32 clock)
 	case 2:
 		count = sizeof(usdhc3_pads) / sizeof(usdhc3_pads[0]);
 		usdhc_switch_pad(usdhc3_pads, count, new_pads, pad_ctrl);
-		break;
-	case 3:
-		count = sizeof(usdhc4_pads) / sizeof(usdhc4_pads[0]);
-		usdhc_switch_pad(usdhc4_pads, count, new_pads, pad_ctrl);
 		break;
 	default:
 		printf("Warning: you configured more USDHC controllers"
@@ -1602,11 +1595,7 @@ void lcd_enable(void)
 
 	/* LVDS enable */
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_17__GPIO_7_12));
-	gpio_direction_output(LVDS0_EN, 1);
-
-	/* LVDS CNTRL_VGH */
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_SD4_DAT2__GPIO_2_10));
-	gpio_direction_output(LCD_CNTRL_VGH, 1);
+	gpio_direction_output(LVDS0_LED_EN, 1);
 
 #if defined CONFIG_MX6Q
 	/*
@@ -1846,12 +1835,31 @@ int board_init(void)
 	mxc_iomux_v3_init((void *)IOMUXC_BASE_ADDR);
 
 	/* set up external LEDs */
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_2__GPIO_1_2));
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_5__GPIO_1_5));
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_7__GPIO_1_7));
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_8__GPIO_1_8));
+	gpio_direction_output(EXT_LED0, 1);
 	gpio_direction_output(EXT_LED1, 1);
 	gpio_direction_output(EXT_LED2, 0);
 	gpio_direction_output(EXT_LED3, 0);
+
+	/* do these now so the LCD blanks as early as possible */
+#ifdef CONFIG_MX6DL_UIB_REV_1
+	/* LVDS CNTRL_VGH */
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_SD4_DAT2__GPIO_2_10));
+	gpio_direction_output(LCD_CNTRL_VGH, 1);
+#else
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D20__GPIO_3_20));
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D25__GPIO_3_25));
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D27__GPIO_3_27));
+	gpio_direction_output(LCD_PWR_EN, 1);
+	gpio_direction_output(LCD_STBYB, 1);
+	/* toggle LCD RESET line */
+	gpio_direction_output(LCD_RESET, 0);
+	udelay(1000);
+	gpio_set_value(LCD_RESET, 1);
+#endif
 
 	setup_boot_device();
 	fsl_set_system_rev();
@@ -1950,7 +1958,7 @@ int board_late_init(void)
 	gpio_set_value(EXT_LED2, 0);
 	gpio_set_value(EXT_LED3, 0);
 
-#ifdef CONFIG_LCD
+#ifdef CONFIG_MX6DL_UIB_REV_1
 	/* PWM speaker test */
 	imx_pwm_config(pwm3, 0, 1000000);
 	imx_pwm_enable(pwm3);
@@ -2150,19 +2158,20 @@ int checkboard(void)
 
 void udc_pins_setting(void)
 {
+#ifdef CONFIG_MX6DL_UIB_REV_1
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D22__GPIO_3_22));
 
 	/* disable USB OTG power */
 	gpio_direction_output(USB_OTG_PWR_N, 1);
-
-#ifndef CONFIG_MX6DL_UIB_REV_1
-	/* USB_H1_POWER = 1 */
-	/* don't use USB Host 1 on Rev 1 board
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_ENET_TXD1__GPIO_1_29));
-	gpio_direction_output(USB_H1_POWER, 1); */
 #endif
 
 #if 0
+	/* USB_H1_POWER = 1 */
+	/* don't use USB Host 1 on Rev 1 board
+	** This is NC on both Rev 1 and Rev 2.
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_ENET_TXD1__GPIO_1_29));
+	gpio_direction_output(USB_H1_POWER, 1); */
+
 	/* No OTG mode on UIB */
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_ENET_RX_ER__ANATOP_USBOTG_ID));
 	mxc_iomux_set_gpr_register(1, 13, 1, 1);

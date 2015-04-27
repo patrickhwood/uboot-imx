@@ -26,7 +26,7 @@
 #include "mx6dl_sabresd.h"
 
 #define CONFIG_MX6DL_UIB
-#define CONFIG_MX6DL_UIB_REV_1
+#define CONFIG_MX6DL_UIB_REV_2
 
 #undef PHYS_SDRAM_1_SIZE
 #define PHYS_SDRAM_1_SIZE	(2u * 1024 * 1024 * 1024)
