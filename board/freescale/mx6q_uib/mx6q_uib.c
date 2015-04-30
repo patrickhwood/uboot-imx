@@ -1913,9 +1913,9 @@ int check_recovery_cmd_file(void)
 	int button_pressed = 0;
 	int recovery_mode = 0;
 
-#if !defined(CONFIG_MX6DL_UIB) && !defined(CONFIG_MX6Q_UIB)
 	recovery_mode = check_and_clean_recovery_flag();
 
+#if !defined(CONFIG_MX6DL_UIB) && !defined(CONFIG_MX6Q_UIB)
 	/* Check Recovery Combo Button press or not. */
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_5__GPIO_1_5));
 

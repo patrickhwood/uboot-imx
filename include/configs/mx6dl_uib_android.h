@@ -158,17 +158,19 @@
 		"androidboot.hardware=freescale androidboot.serialno=0a01234567890abc\0" \
 		"bootcmd_sd=mmc dev 1;"												\
 		"setenv bootargs ${bootargs} androidboot.rootdevice=sd; " 			\
-		"booti mmc1\0"														\
+		"booti mmc1 ${recovery}\0"											\
 		"bootcmd_emmc=mmc dev 0;"											\
 		"setenv bootargs ${bootargs} androidboot.rootdevice=emmc; " 		\
-		"booti mmc0\0"														\
-		"bootcmd=run bootargs_base; "										\
-		"if test ${bootdev} = mmc1; "						\
+		"booti mmc0 ${recovery}\0"											\
+		"bootcmd=setenv recovery; run bootuib\0"							\
+		"bootuib=run bootargs_base; "										\
+		"if test ${bootdev} = mmc1; "										\
 		"  then run bootcmd_sd; "											\
 		"  else run bootcmd_emmc; fi\0"										\
 		"splashimage=0x30000000\0"											\
 		"splashpos=m,m\0"													\
 		"lvds_num=0\0"														\
+		"bootcmd_android_recovery=setenv recovery recovery;	run bootuib\0"	\
 
 
 #endif
