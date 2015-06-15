@@ -29,7 +29,21 @@
 #define CONFIG_MX6DL_UIB_REV_2
 
 #undef PHYS_SDRAM_1_SIZE
+#undef CONFIG_SYS_PROMPT
+#undef CONFIG_DDR_32BIT
+#undef CONFIG_DDR_64BIT
+
+#ifdef CONFIG_MX6DL_UIB_REV_3
+#define CONFIG_DDR_32BIT
+#define CONFIG_SYS_PROMPT       "MX6Solo Glance U-Boot > "
+#define PHYS_SDRAM_1_SIZE	(1u * 1024 * 1024 * 1024)
+#define NOSMP "nosmp "		// note: trailing space is significant
+#else
+#define CONFIG_DDR_64BIT
+#define CONFIG_SYS_PROMPT       "MX6DL Glance U-Boot > "
 #define PHYS_SDRAM_1_SIZE	(2u * 1024 * 1024 * 1024)
+#define NOSMP ""
+#endif
 
 #undef CONFIG_ENV_IS_IN_MMC
 #define CONFIG_ENV_IS_NOWHERE
@@ -153,7 +167,7 @@
 #define	CONFIG_EXTRA_ENV_SETTINGS											\
 		"bootargs_base=setenv bootargs console=ttymxc0,115200 init=/init "	\
 		"video=mxcfb0:dev=ldb,LDB-WSVGA,bpp=32,if=RGB24 ldb=sin0 "			\
-		"video=mxcfb1:off video=mxcfb2:off "								\
+		"video=mxcfb1:off video=mxcfb2:off " NOSMP							\
 		"log_buf_len=64K vmalloc=400M androidboot.console=ttymxc0 "			\
 		"androidboot.hardware=freescale androidboot.serialno=0a01234567890abc\0" \
 		"bootcmd_sd=mmc dev 1;"												\
