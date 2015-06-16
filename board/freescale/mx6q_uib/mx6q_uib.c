@@ -839,10 +839,10 @@ static int setup_pmic_voltages(void)
 
 #ifdef CONFIG_MX6DL_UIB_REV_1
 		/* Set ARM/SOC standby voltage to 1.05v */
-		// value = 0x0c;
+		value = 0x0c;
 #else
 		/* Set ARM/SOC standby voltage to 0.9v */
-		// value = 0x06;
+		value = 0x06;
 #endif
 		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_DVB4B, 1, &value, 1)) {
 			printf("Set BUCK4 error!\n");
@@ -1913,9 +1913,9 @@ int check_recovery_cmd_file(void)
 	int button_pressed = 0;
 	int recovery_mode = 0;
 
-#if !defined(CONFIG_MX6DL_UIB) && !defined(CONFIG_MX6Q_UIB)
 	recovery_mode = check_and_clean_recovery_flag();
 
+#if !defined(CONFIG_MX6DL_UIB) && !defined(CONFIG_MX6Q_UIB)
 	/* Check Recovery Combo Button press or not. */
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_5__GPIO_1_5));
 

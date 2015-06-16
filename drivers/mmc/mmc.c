@@ -759,9 +759,9 @@ int mmc_switch_boot_part(int dev_num, unsigned int part_num)
 		1 - boot partition 1
 		2 - boot partition 2
 	*/
-	if (part_num > 2) {
+	if (part_num > 2 && part_num != 7) {
 		printf("Wrong partition id - "
-			"0 (user area), 1 (boot1), 2 (boot2)\n");
+			"0 (no boot), 1 (boot1), 2 (boot2), 7 (user area)\n");
 		return 1;
 	}
 
