@@ -27,6 +27,8 @@
 
 #undef PHYS_SDRAM_1_SIZE
 #define PHYS_SDRAM_1_SIZE	(2u * 1024 * 1024 * 1024)
+#define CONFIG_MX6DL_DDR3
+#define CONFIG_DDR_64BIT /* for DDR 64bit */
 
 #ifdef CONFIG_CMD_I2C
 	#undef CONFIG_SYS_I2C_PORT
@@ -112,6 +114,10 @@
 	"booti mmc1 recovery"
 #define CONFIG_ANDROID_RECOVERY_CMD_FILE "/recovery/command"
 #define CONFIG_INITRD_TAG
+
+#define CONFIG_ENV_SECT_SIZE    (128 * 1024)
+#define CONFIG_ENV_SIZE         CONFIG_ENV_SECT_SIZE
+#define CONFIG_ENV_IS_NOWHERE   1
 
 #undef CONFIG_LOADADDR
 #undef CONFIG_RD_LOADADDR

@@ -3324,6 +3324,7 @@ mx6q_arm2_iram_config	: unconfig
 	@$(MKCONFIG) $(@:_config=) arm arm_cortexa8 mx6q_arm2 freescale mx6
 
 mx6dl_uib_mfg						\
+mx6solo_uib_android_config			\
 mx6dl_uib_android_config			\
 mx6q_uib_android_config	: unconfig
 	@[ -z "$(findstring iram_,$@)" ] || \
