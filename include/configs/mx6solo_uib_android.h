@@ -19,11 +19,11 @@
  * MA 02111-1307 USA
  */
 
-#ifndef MX6DL_UIB_ANDROID_H
-#define MX6DL_UIB_ANDROID_H
+#ifndef MX6SOLO_UIB_ANDROID_H
+#define MX6SOLO_UIB_ANDROID_H
 
-#define CONFIG_MX6_UIB_64BIT
+#define CONFIG_MX6_UIB_32BIT
+#define CONFIG_MX6_UIB_SOLO
+
 #include "mx6_uib_android.h"
-
 #endif
-
