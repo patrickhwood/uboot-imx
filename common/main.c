@@ -18,6 +18,7 @@
 #include <malloc.h>
 #include <menu.h>
 
+#undef is_boot_from_usb
 #ifdef is_boot_from_usb
 #include <environment.h>
 #endif

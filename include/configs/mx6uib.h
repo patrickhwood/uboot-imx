@@ -6,8 +6,8 @@
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
-#ifndef __MX6QSABRESD_CONFIG_H
-#define __MX6QSABRESD_CONFIG_H
+#ifndef __MX6QUIB_CONFIG_H
+#define __MX6QUIB_CONFIG_H
 
 #include <asm/arch/imx-regs.h>
 #include <asm/imx-common/gpio.h>
@@ -17,7 +17,7 @@
 #define CONFIG_CONSOLE_DEV		"ttymxc0"
 #define CONFIG_MMCROOT			"/dev/mmcblk0p2"  /* SDHC3 */
 
-#include "mx6sabre_common.h"
+#include "mx6uib_common.h"
 
 /* USB Configs */
 #define CONFIG_CMD_USB
@@ -32,12 +32,6 @@
 #define CONFIG_USB_MAX_CONTROLLER_COUNT 1 /* Enabled USB controller number */
 
 #define CONFIG_SYS_FSL_USDHC_NUM	2
-#define CONFIG_SYS_MMC_ENV_DEV		1	/* SDHC3 */
-#define CONFIG_SYS_MMC_ENV_PART                0       /* user partition */
-
-#ifdef CONFIG_SYS_USE_SPINOR
-#define CONFIG_SF_DEFAULT_CS   (0|(IMX_GPIO_NR(4, 9)<<8))
-#endif
 
 /*
  * imx6 q/dl/solo pcie would be failed to work properly in kernel, if
@@ -91,4 +85,4 @@
 #endif
 #endif /* CONFIG_SPLASH_SCREEN && CONFIG_MXC_EPDC */
 
-#endif                         /* __MX6QSABRESD_CONFIG_H */
+#endif                         /* __MX6QUIB_CONFIG_H */

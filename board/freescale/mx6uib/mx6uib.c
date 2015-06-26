@@ -17,8 +17,6 @@
 #include <asm/imx-common/boot_mode.h>
 #include <mmc.h>
 #include <fsl_esdhc.h>
-#include <miiphy.h>
-#include <netdev.h>
 
 #if defined(CONFIG_MX6DL) && defined(CONFIG_MXC_EPDC)
 #include <lcd.h>
@@ -97,36 +95,6 @@ iomux_v3_cfg_t const uart1_pads[] = {
 	MX6_PAD_CSI0_DAT11__UART1_RX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL),
 };
 
-iomux_v3_cfg_t const enet_pads[] = {
-	MX6_PAD_ENET_MDIO__ENET_MDIO		| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_ENET_MDC__ENET_MDC		| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_TXC__RGMII_TXC	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_TD0__RGMII_TD0	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_TD1__RGMII_TD1	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_TD2__RGMII_TD2	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_TD3__RGMII_TD3	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_TX_CTL__RGMII_TX_CTL	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_ENET_REF_CLK__ENET_TX_CLK	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_RXC__RGMII_RXC	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_RD0__RGMII_RD0	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_RD1__RGMII_RD1	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_RD2__RGMII_RD2	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_RD3__RGMII_RD3	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII_RX_CTL__RGMII_RX_CTL	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	/* AR8031 PHY Reset */
-	MX6_PAD_ENET_CRS_DV__GPIO1_IO25		| MUX_PAD_CTRL(NO_PAD_CTRL),
-};
-
-static void setup_iomux_enet(void)
-{
-	imx_iomux_v3_setup_multiple_pads(enet_pads, ARRAY_SIZE(enet_pads));
-
-	/* Reset AR8031 PHY */
-	gpio_direction_output(IMX_GPIO_NR(1, 25) , 0);
-	udelay(500);
-	gpio_set_value(IMX_GPIO_NR(1, 25), 1);
-}
-
 iomux_v3_cfg_t const usdhc2_pads[] = {
 	MX6_PAD_SD2_CLK__SD2_CLK	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX6_PAD_SD2_CMD__SD2_CMD	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
@@ -163,16 +131,6 @@ static void setup_spinor(void)
 	gpio_direction_output(IMX_GPIO_NR(4, 9), 0);
 }
 #endif
-
-iomux_v3_cfg_t const pcie_pads[] = {
-	MX6_PAD_EIM_D19__GPIO3_IO19 | MUX_PAD_CTRL(NO_PAD_CTRL),	/* POWER */
-	MX6_PAD_GPIO_17__GPIO7_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL),	/* RESET */
-};
-
-static void setup_pcie(void)
-{
-	imx_iomux_v3_setup_multiple_pads(pcie_pads, ARRAY_SIZE(pcie_pads));
-}
 
 iomux_v3_cfg_t const di0_pads[] = {
 	MX6_PAD_DI0_DISP_CLK__IPU1_DI0_DISP_CLK,	/* DISP0_CLK */
@@ -487,30 +445,6 @@ struct fsl_esdhc_cfg usdhc_cfg[2] = {
 	{USDHC2_BASE_ADDR, 0, 4},
 };
 
-int mmc_get_env_devno(void)
-{
-	u32 soc_sbmr = readl(SRC_BASE_ADDR + 0x4);
-	u32 dev_no;
-	u32 bootsel;
-
-	bootsel = (soc_sbmr & 0x000000FF) >> 6 ;
-
-	/* If not boot from sd/mmc, use default value */
-	if (bootsel != 1)
-		return CONFIG_SYS_MMC_ENV_DEV;
-
-	/* BOOT_CFG2[3] and BOOT_CFG2[4] */
-	dev_no = (soc_sbmr & 0x00001800) >> 11;
-
-	/* need ubstract 1 to map to the mmc device id
-	 * see the comments in board_mmc_init function
-	 */
-
-	dev_no--;
-
-	return dev_no;
-}
-
 int mmc_map_to_kernel_blk(int dev_no)
 {
 	return dev_no + 1;
@@ -541,9 +475,8 @@ int board_mmc_init(bd_t *bis)
 	/*
 	 * According to the board_mmc_init() the following map is done:
 	 * (U-boot device node)    (Physical Port)
-	 * mmc0                    SD2
-	 * mmc1                    SD3
-	 * mmc2                    eMMC
+	 * mmc0                    eMMC
+	 * mmc1                    SD2
 	 */
 	for (i = 0; i < CONFIG_SYS_FSL_USDHC_NUM; i++) {
 		switch (i) {
@@ -582,11 +515,12 @@ int check_mmc_autodetect(void)
 	return 0;
 }
 
+#ifdef CONFIG_ENV_IS_IN_MMC
 void board_late_mmc_env_init(void)
 {
 	char cmd[32];
 	char mmcblk[32];
-	u32 dev_no = mmc_get_env_devno();
+	u32 dev_no = 0;
 
 	if (!check_mmc_autodetect())
 		return;
@@ -601,6 +535,7 @@ void board_late_mmc_env_init(void)
 	sprintf(cmd, "mmc dev %d", dev_no);
 	run_command(cmd, 0);
 }
+#endif
 #endif
 
 #if defined(CONFIG_MX6DL) && defined(CONFIG_MXC_EPDC)
@@ -871,39 +806,6 @@ void epdc_power_off(void)
 }
 #endif
 
-int mx6_rgmii_rework(struct phy_device *phydev)
-{
-	unsigned short val;
-
-	/* To enable AR8031 ouput a 125MHz clk from CLK_25M */
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
-
-	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
-	val &= 0xffe3;
-	val |= 0x18;
-	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val);
-
-	/* introduce tx clock delay */
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x5);
-	val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
-	val |= 0x0100;
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val);
-
-	return 0;
-}
-
-int board_phy_config(struct phy_device *phydev)
-{
-	mx6_rgmii_rework(phydev);
-
-	if (phydev->drv->config)
-		phydev->drv->config(phydev);
-
-	return 0;
-}
-
 #if defined(CONFIG_VIDEO_IPUV3)
 struct display_info_t {
 	int	bus;
@@ -1085,14 +987,6 @@ int overwrite_console(void)
 	return 1;
 }
 
-int board_eth_init(bd_t *bis)
-{
-	setup_iomux_enet();
-	setup_pcie();
-
-	return cpu_eth_init(bis);
-}
-
 int board_early_init_f(void)
 {
 	setup_iomux_uart();
@@ -1136,14 +1030,37 @@ static const struct boot_mode board_boot_modes[] = {
 
 int board_late_init(void)
 {
+	struct mmc *mmc = find_mmc_device(1);
 	int ret = 0;
+	int bootdev = get_boot_device();
+	uint soc_sbmr2 = readl(SRC_BASE_ADDR + 0x1C);
+
+	printf("boot mode: %d, bootdev: %d\n", (soc_sbmr2 >> 24) & 3, bootdev);
+
 #ifdef CONFIG_CMD_BMODE
 	add_board_boot_modes(board_boot_modes);
 #endif
 
+	switch (bootdev) {
+	case SD2_BOOT:
+	case SD3_BOOT:
+		if(!mmc_init(mmc)) {
+			setenv("bootdev", "mmc1");
+			break;
+		}
+		else {
+			puts("SD card init failed; fail over to eMMC\n");
+		}
+	case MMC3_BOOT:
+		setenv("bootdev", "mmc0");
+		break;
+	default:
+		printf("unsupported boot devices\n");
+		break;
+	}
+
 #ifdef CONFIG_SYS_I2C_MXC
-	setup_i2c(1, CONFIG_SYS_I2C_SPEED,
-			0x7f, &i2c_pad_info1);
+	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
 	ret = setup_pmic_voltages();
 	if (ret)
 		return -1;
@@ -1167,34 +1084,19 @@ int checkboard(void)
 void board_fastboot_setup(void)
 {
 	switch (get_boot_device()) {
-#if defined(CONFIG_FASTBOOT_STORAGE_SATA)
-	case SATA_BOOT:
-		if (!getenv("fastboot_dev"))
-			setenv("fastboot_dev", "sata");
-		if (!getenv("bootcmd"))
-			setenv("bootcmd", "booti sata");
-		break;
-#endif /*CONFIG_FASTBOOT_STORAGE_SATA*/
 #if defined(CONFIG_FASTBOOT_STORAGE_MMC)
 	case SD2_BOOT:
-	case MMC2_BOOT:
-	    if (!getenv("fastboot_dev"))
-			setenv("fastboot_dev", "mmc0");
-	    if (!getenv("bootcmd"))
-			setenv("bootcmd", "booti mmc0");
-	    break;
 	case SD3_BOOT:
-	case MMC3_BOOT:
 	    if (!getenv("fastboot_dev"))
 			setenv("fastboot_dev", "mmc1");
 	    if (!getenv("bootcmd"))
 			setenv("bootcmd", "booti mmc1");
 	    break;
-	case MMC4_BOOT:
+	case MMC3_BOOT:
 	    if (!getenv("fastboot_dev"))
-			setenv("fastboot_dev", "mmc2");
+			setenv("fastboot_dev", "mmc0");
 	    if (!getenv("bootcmd"))
-			setenv("bootcmd", "booti mmc2");
+			setenv("bootcmd", "booti mmc0");
 	    break;
 #endif /*CONFIG_FASTBOOT_STORAGE_MMC*/
 	default:
@@ -1206,30 +1108,9 @@ void board_fastboot_setup(void)
 
 #ifdef CONFIG_ANDROID_RECOVERY
 
-#define GPIO_VOL_DN_KEY IMX_GPIO_NR(1, 5)
-iomux_v3_cfg_t const recovery_key_pads[] = {
-	(MX6_PAD_GPIO_5__GPIO1_IO05 | MUX_PAD_CTRL(NO_PAD_CTRL)),
-};
-
 int check_recovery_cmd_file(void)
 {
-    int button_pressed = 0;
-    int recovery_mode = 0;
-
-    recovery_mode = recovery_check_and_clean_flag();
-
-    /* Check Recovery Combo Button press or not. */
-	imx_iomux_v3_setup_multiple_pads(recovery_key_pads,
-			ARRAY_SIZE(recovery_key_pads));
-
-    gpio_direction_input(GPIO_VOL_DN_KEY);
-
-    if (gpio_get_value(GPIO_VOL_DN_KEY) == 0) { /* VOL_DN key is low assert */
-		button_pressed = 1;
-		printf("Recovery key pressed\n");
-    }
-
-    return recovery_mode || button_pressed;
+    return recovery_check_and_clean_flag();
 }
 
 void board_recovery_setup(void)
@@ -1237,30 +1118,17 @@ void board_recovery_setup(void)
 	int bootdev = get_boot_device();
 
 	switch (bootdev) {
-#if defined(CONFIG_FASTBOOT_STORAGE_SATA)
-	case SATA_BOOT:
-		if (!getenv("bootcmd_android_recovery"))
-			setenv("bootcmd_android_recovery",
-				"booti sata recovery");
-		break;
-#endif /*CONFIG_FASTBOOT_STORAGE_SATA*/
 #if defined(CONFIG_FASTBOOT_STORAGE_MMC)
 	case SD2_BOOT:
-	case MMC2_BOOT:
-		if (!getenv("bootcmd_android_recovery"))
-			setenv("bootcmd_android_recovery",
-				"booti mmc0 recovery");
-		break;
 	case SD3_BOOT:
-	case MMC3_BOOT:
 		if (!getenv("bootcmd_android_recovery"))
 			setenv("bootcmd_android_recovery",
 				"booti mmc1 recovery");
 		break;
-	case MMC4_BOOT:
+	case MMC3_BOOT:
 		if (!getenv("bootcmd_android_recovery"))
 			setenv("bootcmd_android_recovery",
-				"booti mmc2 recovery");
+				"booti mmc0 recovery");
 		break;
 #endif /*CONFIG_FASTBOOT_STORAGE_MMC*/
 	default:
