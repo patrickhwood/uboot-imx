@@ -420,9 +420,7 @@ static void save_env(struct fastboot_ptentry *ptn,
 		     char *var, char *val)
 {
 	setenv(var, val);
-#ifndef CONFIG_ENV_IS_NOWHERE
 	saveenv();
-#endif
 }
 #endif
 

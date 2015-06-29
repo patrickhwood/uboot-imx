@@ -439,6 +439,13 @@ void ldo_mode_set(int ldo_bypass)
 #endif
 #endif
 
+#ifdef CONFIG_ENV_IS_NOWHERE
+int saveenv (void)
+{
+	return 0;
+}
+#endif
+
 #ifdef CONFIG_FSL_ESDHC
 struct fsl_esdhc_cfg usdhc_cfg[2] = {
 	{USDHC3_BASE_ADDR, 0, 8},
