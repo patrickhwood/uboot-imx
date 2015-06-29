@@ -78,6 +78,8 @@
 #define CONFIG_CMD_SETEXPR
 #undef CONFIG_CMD_IMLS
 
+#undef CONFIG_CMD_NET
+
 #define CONFIG_BOOTDELAY               1
 
 #define CONFIG_LOADADDR                        0x12000000
