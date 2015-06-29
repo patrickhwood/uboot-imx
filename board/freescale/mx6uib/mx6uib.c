@@ -963,6 +963,33 @@ int board_init(void)
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
+	/* set up external LEDs */
+	imx_iomux_v3_setup_pad(MX6_PAD_GPIO_2__GPIO1_IO02 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	imx_iomux_v3_setup_pad(MX6_PAD_GPIO_5__GPIO1_IO05 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	imx_iomux_v3_setup_pad(MX6_PAD_GPIO_7__GPIO1_IO07 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	imx_iomux_v3_setup_pad(MX6_PAD_GPIO_8__GPIO1_IO08 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	gpio_direction_output(EXT_LED0, 1);
+	gpio_direction_output(EXT_LED1, 1);
+	gpio_direction_output(EXT_LED2, 0);
+	gpio_direction_output(EXT_LED3, 0);
+
+	/* setup lcd */
+	imx_iomux_v3_setup_pad(MX6_PAD_EIM_D20__GPIO3_IO20 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	imx_iomux_v3_setup_pad(MX6_PAD_EIM_D25__GPIO3_IO25 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	imx_iomux_v3_setup_pad(MX6_PAD_EIM_D27__GPIO3_IO27 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	gpio_direction_output(LCD_PWR_EN, 1);
+	gpio_direction_output(LCD_STBYB, 1);
+	/* toggle LCD RESET line */
+	gpio_direction_output(LCD_RESET, 0);
+	udelay(1000);
+	gpio_set_value(LCD_RESET, 1);
+
+	/* clear recovery boot latch */
+	imx_iomux_v3_setup_pad(MX6_PAD_EIM_D16__GPIO3_IO16 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	gpio_direction_output(RECOVERY_BOOT_LATCH, 0);
+	udelay(100);
+	gpio_direction_output(RECOVERY_BOOT_LATCH, 1);
+
 #if defined(CONFIG_MX6DL) && defined(CONFIG_MXC_EPDC)
 	setup_epdc();
 #endif
