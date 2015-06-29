@@ -31,6 +31,7 @@
 #ifdef CONFIG_SYS_I2C_MXC
 #include <i2c.h>
 #include <asm/imx-common/mxc_i2c.h>
+#include "ltc3676.h"
 #endif
 #ifdef CONFIG_CMD_SATA
 #include <asm/imx-common/sata.h>
@@ -43,6 +44,20 @@
 #endif /*CONFIG_FASTBOOT*/
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#define TOUCH_RST_N IMX_GPIO_NR(3, 24)
+#define LVDS0_LED_EN IMX_GPIO_NR(7, 12)
+#define LVDS0_AVDD_PG_N IMX_GPIO_NR(3, 19)
+
+#define LCD_PWR_EN IMX_GPIO_NR(3, 20)
+#define LCD_STBYB IMX_GPIO_NR(3, 25)
+#define LCD_RESET IMX_GPIO_NR(3, 27)
+#define RECOVERY_BOOT_LATCH IMX_GPIO_NR(3, 16)
+
+#define EXT_LED0 IMX_GPIO_NR(1, 2)
+#define EXT_LED1 IMX_GPIO_NR(1, 5)
+#define EXT_LED2 IMX_GPIO_NR(1, 7)
+#define EXT_LED3 IMX_GPIO_NR(1, 8)
 
 #define UART_PAD_CTRL  (PAD_CTL_PUS_100K_UP |			\
 	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm |			\
@@ -68,7 +83,19 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #ifdef CONFIG_SYS_I2C_MXC
 #define PC MUX_PAD_CTRL(I2C_PAD_CTRL)
-/* I2C2 Camera, MIPI, pfuze */
+struct i2c_pads_info i2c_pad_info0 = {
+	.scl = {
+		.i2c_mode = MX6_PAD_CSI0_DAT9__I2C1_SCL | PC,
+		.gpio_mode = MX6_PAD_CSI0_DAT9__GPIO5_IO27 | PC,
+		.gp = IMX_GPIO_NR(5, 27)
+	},
+	.sda = {
+		.i2c_mode = MX6_PAD_CSI0_DAT8__I2C1_SDA | PC,
+		.gpio_mode = MX6_PAD_CSI0_DAT8__GPIO5_IO26 | PC,
+		.gp = IMX_GPIO_NR(5, 26)
+	}
+};
+
 struct i2c_pads_info i2c_pad_info1 = {
 	.scl = {
 		.i2c_mode = MX6_PAD_KEY_COL3__I2C2_SCL | PC,
@@ -79,6 +106,19 @@ struct i2c_pads_info i2c_pad_info1 = {
 		.i2c_mode = MX6_PAD_KEY_ROW3__I2C2_SDA | PC,
 		.gpio_mode = MX6_PAD_KEY_ROW3__GPIO4_IO13 | PC,
 		.gp = IMX_GPIO_NR(4, 13)
+	}
+};
+
+struct i2c_pads_info i2c_pad_info2 = {
+	.scl = {
+		.i2c_mode = MX6_PAD_GPIO_3__I2C3_SCL | PC,
+		.gpio_mode = MX6_PAD_GPIO_3__GPIO1_IO03 | PC,
+		.gp = IMX_GPIO_NR(1, 3)
+	},
+	.sda = {
+		.i2c_mode = MX6_PAD_GPIO_6__I2C3_SDA | PC,
+		.gpio_mode = MX6_PAD_GPIO_6__GPIO1_IO06 | PC,
+		.gp = IMX_GPIO_NR(1, 6)
 	}
 };
 #endif
@@ -192,201 +232,127 @@ static void setup_iomux_uart(void)
 }
 
 #ifdef CONFIG_SYS_I2C_MXC
-
-/* set all switches APS in normal and PFM mode in standby */
-static int setup_pmic_mode(int chip)
+static void reset_ssd_touch(void)
 {
-	unsigned char offset, i, switch_num, value;
-
-	if (!chip) {
-		/* pfuze100 */
-		switch_num = 6;
-		offset = 0x31;
-	} else {
-		/* pfuze200 */
-		switch_num = 4;
-		offset = 0x38;
-	}
-
-	value = 0xc;
-	if (i2c_write(0x8, 0x23, 1, &value, 1)) {
-		printf("Set SW1AB mode error!\n");
-		return -1;
-	}
-
-	for (i = 0; i < switch_num - 1; i++) {
-		if (i2c_write(0x8, offset + i * 7, 1, &value, 1)) {
-			printf("Set switch%x mode error!\n", offset);
-			return -1;
-		}
-	}
-
-	return 0;
+	printf("reset touch panel\n");
+	/* reset UIB touch panel */
+	gpio_direction_output(TOUCH_RST_N, 0);
+	__udelay(100000);
+	gpio_direction_output(TOUCH_RST_N, 1);
 }
-
 static int setup_pmic_voltages(void)
 {
-	unsigned char value, rev_id = 0 ;
+	unsigned char value;
+	unsigned char __attribute__((unused)) reg[32];
+	int __attribute__((unused)) i;
 
+	// PMIC is on I2C bus 1
 	i2c_set_bus_num(1);
-	if (!i2c_probe(0x8)) {
-		if (i2c_read(0x8, 0, 1, &value, 1)) {
-			printf("Read device ID error!\n");
-			return -1;
+	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
+	if (!i2c_probe(LTC3676_I2C_ADDR)) {
+		printf("Found LCT3676\n");
+#if 0
+		for (i = 1; i <= 0x17; i++) {
+			if (i2c_read(LTC3676_I2C_ADDR, i, 1, &reg[i], 1)) {
+				printf("Read Rev ID error!\n");
+				return -1;
+			}
+			printf(":%02x", reg[i]);
 		}
-		if (i2c_read(0x8, 3, 1, &rev_id, 1)) {
-			printf("Read Rev ID error!\n");
-			return -1;
-		}
-		printf("Found PFUZE%s deviceid=%x,revid=%x\n",
-			((value & 0xf) == 0) ? "100" : "200", value, rev_id);
+		printf("\n");
+#endif
 
-		if (setup_pmic_mode(value & 0xf)) {
-			printf("setup pmic mode error!\n");
+		/* enable BUCK1, CLK 1.25MHz */
+		value = (1<<2);
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK1, 1, &value, 1)) {
+			printf("Set BUCK1 error!\n");
 			return -1;
 		}
-		/*For camera streaks issue,swap VGEN5 and VGEN3 to power camera.
-		*sperate VDDHIGH_IN and camera 2.8V power supply, after switch:
-		*VGEN5 for VDDHIGH_IN and increase to 3V to align with datasheet
-		*VGEN3 for camera 2.8V power supply
-		*/
-		/*increase VGEN3 from 2.5 to 2.8V*/
-		if (i2c_read(0x8, 0x6e, 1, &value, 1)) {
-			printf("Read VGEN3 error!\n");
+		/* enable BUCK2, CLK 1.25MHz, clock phase 2 */
+		value = (1<<7) | (1<<1) | (1<<2) | (1<<3);
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK2, 1, &value, 1)) {
+			printf("Set BUCK2 error!\n");
 			return -1;
 		}
-		value &= ~0xf;
-		value |= 0xa;
-		if (i2c_write(0x8, 0x6e, 1, &value, 1)) {
-			printf("Set VGEN3 error!\n");
+		/* enable BUCK3, CLK 1.25MHz ,clock phase 2 */
+		value = (1<<7) | (1<<1) | (1<<2) | (1<<3);
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK3, 1, &value, 1)) {
+			printf("Set BUCK3 error!\n");
 			return -1;
 		}
-		/*increase VGEN5 from 2.8 to 3V*/
-		if (i2c_read(0x8, 0x70, 1, &value, 1)) {
-			printf("Read VGEN5 error!\n");
-			return -1;
-		}
-		value &= ~0xf;
-		value |= 0xc;
-		if (i2c_write(0x8, 0x70, 1, &value, 1)) {
-			printf("Set VGEN5 error!\n");
-			return -1;
-		}
-		/* set SW1AB staby volatage 0.975V*/
-		if (i2c_read(0x8, 0x21, 1, &value, 1)) {
-			printf("Read SW1ABSTBY error!\n");
-			return -1;
-		}
-		value &= ~0x3f;
-		value |= 0x1b;
-		if (i2c_write(0x8, 0x21, 1, &value, 1)) {
-			printf("Set SW1ABSTBY error!\n");
-			return -1;
-		}
-		/* set SW1AB/VDDARM step ramp up time from 16us to 4us/25mV */
-		if (i2c_read(0x8, 0x24, 1, &value, 1)) {
-			printf("Read SW1ABSTBY error!\n");
-			return -1;
-		}
-		value &= ~0xc0;
-		value |= 0x40;
-		if (i2c_write(0x8, 0x24, 1, &value, 1)) {
-			printf("Set SW1ABSTBY error!\n");
+		/* enable BUCK4, CLK 1.25MHz */
+		value = (1<<7) | (1<<1) | (1<<2);
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_BUCK4, 1, &value, 1)) {
+			printf("Set BUCK4 error!\n");
 			return -1;
 		}
 
-		/* set SW1C staby volatage 0.975V*/
-		if (i2c_read(0x8, 0x2f, 1, &value, 1)) {
-			printf("Read SW1CSTBY error!\n");
+		/* enable LDO2 */
+		value = (1<<2);
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_LDOA, 1, &value, 1)) {
+			printf("Set LDO2 error!\n");
 			return -1;
 		}
-		value &= ~0x3f;
-		value |= 0x1b;
-		if (i2c_write(0x8, 0x2f, 1, &value, 1)) {
-			printf("Set SW1CSTBY error!\n");
+		/* enable LDO4 */
+		value = (1<<2) | (1<<0);
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_LDOB, 1, &value, 1)) {
+			printf("Set LDO4 error!\n");
 			return -1;
 		}
 
-		/* set SW1C/VDDSOC step ramp up time to from 16us to 4us/25mV */
-		if (i2c_read(0x8, 0x32, 1, &value, 1)) {
-			printf("Read SW1ABSTBY error!\n");
+		/* Set ARM/SOC voltage to 1.35v */
+		value = 0x19;
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_DVB4A, 1, &value, 1)) {
+			printf("Set BUCK4 error!\n");
 			return -1;
 		}
-		value &= ~0xc0;
-		value |= 0x40;
-		if (i2c_write(0x8, 0x32, 1, &value, 1)) {
-			printf("Set SW1ABSTBY error!\n");
+
+		/* Set ARM/SOC standby voltage to 0.9v */
+		value = 0x06;
+		if (i2c_write(LTC3676_I2C_ADDR, LTC3676_REG_DVB4B, 1, &value, 1)) {
+			printf("Set BUCK4 error!\n");
 			return -1;
 		}
+
+#if 0
+		for (i = 1; i <= 0x17; i++) {
+			if (i2c_read(LTC3676_I2C_ADDR, i, 1, &reg[i], 1)) {
+				printf("Read Rev ID error!\n");
+				return -1;
+			}
+			printf(":%02x", reg[i]);
+		}
+		printf("\n");
+#endif
 	}
-
+	else {
+		printf("LCT3676 didn't respond to probe!!\n");
+	}
 	return 0;
 }
 
 #ifdef CONFIG_LDO_BYPASS_CHECK
 void ldo_mode_set(int ldo_bypass)
 {
-	unsigned char value;
+	int vddarm;
 	int is_400M;
-	unsigned char vddarm;
 
 	/* increase VDDARM/VDDSOC to support 1.2G chip */
 	if (check_1_2G()) {
 		ldo_bypass = 0;	/* ldo_enable on 1.2G chip */
 		printf("1.2G chip, increase VDDARM_IN/VDDSOC_IN\n");
 		/* increase VDDARM to 1.425V */
-		if (i2c_read(0x8, 0x20, 1, &value, 1)) {
-			printf("Read SW1AB error!\n");
-			return;
-		}
-		value &= ~0x3f;
-		value |= 0x2d;
-		if (i2c_write(0x8, 0x20, 1, &value, 1)) {
-			printf("Set SW1AB error!\n");
-			return;
-		}
+
 		/* increase VDDSOC to 1.425V */
-		if (i2c_read(0x8, 0x2e, 1, &value, 1)) {
-			printf("Read SW1C error!\n");
-			return;
-		}
-		value &= ~0x3f;
-		value |= 0x2d;
-		if (i2c_write(0x8, 0x2e, 1, &value, 1)) {
-			printf("Set SW1C error!\n");
-			return;
-		}
+
 	}
 	/* switch to ldo_bypass mode , boot on 800Mhz */
 	if (ldo_bypass) {
 		prep_anatop_bypass();
 
 		/* decrease VDDARM for 400Mhz DQ:1.1V, DL:1.275V */
-		if (i2c_read(0x8, 0x20, 1, &value, 1)) {
-			printf("Read SW1AB error!\n");
-			return;
-		}
-		value &= ~0x3f;
-#if defined(CONFIG_MX6DL)
-		value |= 0x27;
-#else
-		value |= 0x20;
-#endif
-		if (i2c_write(0x8, 0x20, 1, &value, 1)) {
-			printf("Set SW1AB error!\n");
-			return;
-		}
+
 		/* increase VDDSOC to 1.3V */
-		if (i2c_read(0x8, 0x2e, 1, &value, 1)) {
-			printf("Read SW1C error!\n");
-			return;
-		}
-		value &= ~0x3f;
-		value |= 0x28;
-		if (i2c_write(0x8, 0x2e, 1, &value, 1)) {
-			printf("Set SW1C error!\n");
-			return;
-		}
 
 		/*
 		 * MX6Q:
@@ -409,28 +375,8 @@ void ldo_mode_set(int ldo_bypass)
 #else
 			vddarm = 0x22;
 #endif
-		if (i2c_read(0x8, 0x20, 1, &value, 1)) {
-			printf("Read SW1AB error!\n");
-			return;
-		}
-		value &= ~0x3f;
-		value |= vddarm;
-		if (i2c_write(0x8, 0x20, 1, &value, 1)) {
-			printf("Set SW1AB error!\n");
-			return;
-		}
 
 		/* decrease VDDSOC to 1.175V */
-		if (i2c_read(0x8, 0x2e, 1, &value, 1)) {
-			printf("Read SW1C error!\n");
-			return;
-		}
-		value &= ~0x3f;
-		value |= 0x23;
-		if (i2c_write(0x8, 0x2e, 1, &value, 1)) {
-			printf("Set SW1C error!\n");
-			return;
-		}
 
 		finish_anatop_bypass();
 		printf("switch to ldo_bypass mode!\n");
@@ -1021,6 +967,14 @@ int board_init(void)
 	setup_epdc();
 #endif
 
+#ifdef CONFIG_SYS_I2C_MXC
+	setup_i2c(0, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info0);
+	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
+	setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info2);
+	setup_pmic_voltages();
+	reset_ssd_touch();
+#endif
+
 	return 0;
 }
 
@@ -1038,7 +992,6 @@ static const struct boot_mode board_boot_modes[] = {
 int board_late_init(void)
 {
 	struct mmc *mmc = find_mmc_device(1);
-	int ret = 0;
 	int bootdev = get_boot_device();
 	uint soc_sbmr2 = readl(SRC_BASE_ADDR + 0x1C);
 
@@ -1065,13 +1018,6 @@ int board_late_init(void)
 		printf("unsupported boot devices\n");
 		break;
 	}
-
-#ifdef CONFIG_SYS_I2C_MXC
-	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
-	ret = setup_pmic_voltages();
-	if (ret)
-		return -1;
-#endif
 
 #ifdef CONFIG_ENV_IS_IN_MMC
 	board_late_mmc_env_init();
