@@ -361,7 +361,7 @@
 #else
 #define CONFIG_IPUV3_CLK 264000000
 #endif
-#define CONFIG_IMX_HDMI
+// #define CONFIG_IMX_HDMI
 
 #if defined(CONFIG_ANDROID_SUPPORT)
 #include "mx6uibandroid_common.h"

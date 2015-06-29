@@ -47,6 +47,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define TOUCH_RST_N IMX_GPIO_NR(3, 24)
 #define LVDS0_LED_EN IMX_GPIO_NR(7, 12)
+#define LVDS0_LED_BL IMX_GPIO_NR(1, 9)
 #define LVDS0_AVDD_PG_N IMX_GPIO_NR(3, 19)
 
 #define LCD_PWR_EN IMX_GPIO_NR(3, 20)
@@ -224,7 +225,7 @@ static iomux_v3_cfg_t const epdc_disable_pads[] = {
 	MX6_PAD_EIM_DA5__GPIO3_IO05,
 	MX6_PAD_EIM_DA6__GPIO3_IO06,
 };
-#endif
+#endif // CONFIG_MXC_EPDC
 
 static void setup_iomux_uart(void)
 {
@@ -494,7 +495,7 @@ void board_late_mmc_env_init(void)
 #if defined(CONFIG_MX6DL) && defined(CONFIG_MXC_EPDC)
 #ifdef CONFIG_SPLASH_SCREEN
 extern int mmc_get_env_devno(void);
-int setup_splash_img(void)
+int splash_screen_prepare(void)
 {
 #ifdef CONFIG_SPLASH_IS_IN_MMC
 	int mmc_dev = mmc_get_env_devno();
@@ -530,11 +531,11 @@ int setup_splash_img(void)
 	flush_cache((ulong)addr, blk_cnt * mmc->read_bl_len);
 
 	return (n == blk_cnt) ? 0 : -1;
-#endif
 
 	return 0;
+#endif // CONFIG_SPLASH_IS_IN_MMC
 }
-#endif
+#endif // CONFIG_SPLASH_SCREEN
 
 vidinfo_t panel_info = {
 	.vl_refresh = 85,
@@ -757,7 +758,27 @@ void epdc_power_off(void)
 	/* Set EPD_PWR_CTL0 to low - disable EINK_VDD (3.15) */
 	gpio_set_value(IMX_GPIO_NR(2, 20), 0);
 }
-#endif
+#else // CONFIG_MXC_EPDC
+int splash_screen_prepare(void)
+{
+	char *s;
+	ulong addr;
+	extern unsigned char fsl_bmp_reversed_600x400[];
+	extern unsigned int fsl_bmp_reversed_600x400_size;
+
+	s = getenv("splashimage");
+
+	if (s != NULL) {
+		addr = simple_strtoul(s, NULL, 16);
+		printf("splash_screen_prepare: load splashimage at %lx\n", addr);
+
+		memcpy((char *)addr, (char *)fsl_bmp_reversed_600x400,
+				fsl_bmp_reversed_600x400_size);
+		return 1;
+	}
+	return 0;
+}
+#endif // CONFIG_MXC_EPDC
 
 #if defined(CONFIG_VIDEO_IPUV3)
 struct display_info_t {
@@ -769,6 +790,7 @@ struct display_info_t {
 	struct	fb_videomode mode;
 };
 
+#ifdef CONFIG_IMX_HDMI
 static void disable_lvds(struct display_info_t const *dev)
 {
 	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
@@ -786,28 +808,33 @@ static void do_enable_hdmi(struct display_info_t const *dev)
 	disable_lvds(dev);
 	imx_enable_hdmi_phy();
 }
+#endif // CONFIG_IMX_HDMI
 
-static struct display_info_t const displays[] = {{
+static struct display_info_t const displays[] = {
+{
 	.bus	= -1,
 	.addr	= 0,
-	.pixfmt	= IPU_PIX_FMT_RGB666,
+	.pixfmt	= IPU_PIX_FMT_RGB24,
 	.detect	= NULL,
 	.enable	= NULL,
 	.mode	= {
-		.name           = "Hannstar-XGA",
+		.name           = "OSD070T2168-58TS",
 		.refresh        = 60,
 		.xres           = 1024,
-		.yres           = 768,
-		.pixclock       = 15385,
-		.left_margin    = 220,
-		.right_margin   = 40,
-		.upper_margin   = 21,
-		.lower_margin   = 7,
-		.hsync_len      = 60,
-		.vsync_len      = 10,
+		.yres           = 600,
+		.pixclock       = 19531,
+		.left_margin    = 100,
+		.right_margin   = 100,
+		.upper_margin   = 10,
+		.lower_margin   = 10,
+		.hsync_len      = 120,
+		.vsync_len      = 15,
 		.sync           = FB_SYNC_EXT,
 		.vmode          = FB_VMODE_NONINTERLACED
-} }, {
+	}
+},
+#ifdef CONFIG_IMX_HDMI
+{
 	.bus	= -1,
 	.addr	= 0,
 	.pixfmt	= IPU_PIX_FMT_RGB24,
@@ -827,7 +854,10 @@ static struct display_info_t const displays[] = {{
 		.vsync_len      = 2,
 		.sync           = 0,
 		.vmode          = FB_VMODE_NONINTERLACED
-} } };
+	}
+}
+#endif // CONFIG_IMX_HDMI
+};
 
 int board_video_skip(void)
 {
@@ -881,11 +911,15 @@ static void setup_display(void)
 	struct iomuxc *iomux = (struct iomuxc *)IOMUXC_BASE_ADDR;
 	int reg;
 
+printf("setup display\n");
+
 	/* Setup HSYNC, VSYNC, DISP_CLK for debugging purposes */
 	imx_iomux_v3_setup_multiple_pads(di0_pads, ARRAY_SIZE(di0_pads));
 
 	enable_ipu_clock();
+#ifdef CONFIG_IMX_HDMI
 	imx_setup_hdmi();
+#endif
 
 	/* Turn on LDB0, LDB1, IPU,IPU DI0 clocks */
 	reg = readl(&mxc_ccm->CCGR3);
@@ -943,9 +977,6 @@ int overwrite_console(void)
 int board_early_init_f(void)
 {
 	setup_iomux_uart();
-#if defined(CONFIG_VIDEO_IPUV3)
-	setup_display();
-#endif
 
 #ifdef CONFIG_SYS_USE_SPINOR
 	setup_spinor();
@@ -962,6 +993,10 @@ int board_init(void)
 {
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
+
+#if defined(CONFIG_VIDEO_IPUV3)
+	setup_display();
+#endif
 
 	/* set up external LEDs */
 	imx_iomux_v3_setup_pad(MX6_PAD_GPIO_2__GPIO1_IO02 | MUX_PAD_CTRL(NO_PAD_CTRL));
@@ -983,6 +1018,14 @@ int board_init(void)
 	gpio_direction_output(LCD_RESET, 0);
 	udelay(1000);
 	gpio_set_value(LCD_RESET, 1);
+
+	/* PWM backlight */
+	imx_iomux_v3_setup_pad(MX6_PAD_GPIO_9__GPIO1_IO09 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	gpio_direction_output(LVDS0_LED_BL, 1);
+
+	/* LVDS enable */
+	imx_iomux_v3_setup_pad(MX6_PAD_GPIO_17__GPIO7_IO12 | MUX_PAD_CTRL(NO_PAD_CTRL));
+	gpio_direction_output(LVDS0_LED_EN, 1);
 
 	/* clear recovery boot latch */
 	imx_iomux_v3_setup_pad(MX6_PAD_EIM_D16__GPIO3_IO16 | MUX_PAD_CTRL(NO_PAD_CTRL));
