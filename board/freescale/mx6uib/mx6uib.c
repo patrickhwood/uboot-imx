@@ -763,8 +763,8 @@ int splash_screen_prepare(void)
 {
 	char *s;
 	ulong addr;
-	extern unsigned char fsl_bmp_reversed_600x400[];
-	extern unsigned int fsl_bmp_reversed_600x400_size;
+	extern unsigned char uib_logo_image[];
+	extern unsigned int uib_logo_image_size;
 
 	s = getenv("splashimage");
 
@@ -772,8 +772,8 @@ int splash_screen_prepare(void)
 		addr = simple_strtoul(s, NULL, 16);
 		printf("splash_screen_prepare: load splashimage at %lx\n", addr);
 
-		memcpy((char *)addr, (char *)fsl_bmp_reversed_600x400,
-				fsl_bmp_reversed_600x400_size);
+		memcpy((char *)addr, (char *)uib_logo_image,
+				uib_logo_image_size);
 		return 1;
 	}
 	return 0;
