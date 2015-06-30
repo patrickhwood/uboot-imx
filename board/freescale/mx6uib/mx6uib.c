@@ -770,7 +770,6 @@ int splash_screen_prepare(void)
 
 	if (s != NULL) {
 		addr = simple_strtoul(s, NULL, 16);
-		printf("splash_screen_prepare: load splashimage at %lx\n", addr);
 
 		memcpy((char *)addr, (char *)uib_logo_image,
 				uib_logo_image_size);

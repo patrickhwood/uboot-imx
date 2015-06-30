@@ -72,7 +72,6 @@
 		"  else run bootcmd_emmc; fi\0"										\
 		"splashimage=0x30000000\0"											\
 		"splashpos=m,m\0"													\
-		"lvds_num=0\0"														\
 		"bootcmd_android_recovery=setenv recovery recovery;	run bootuib\0"	\
 
 #if defined(CONFIG_FASTBOOT_STORAGE_NAND)
