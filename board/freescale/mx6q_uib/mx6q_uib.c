@@ -108,9 +108,6 @@ static enum boot_device boot_dev;
 #endif
 
 #define EXT_LED0 IMX_GPIO_NR(1, 2)
-#define EXT_LED1 IMX_GPIO_NR(1, 5)
-#define EXT_LED2 IMX_GPIO_NR(1, 7)
-#define EXT_LED3 IMX_GPIO_NR(1, 8)
 
 extern int sata_curr_device;
 
@@ -1839,13 +1836,7 @@ int board_init(void)
 
 	/* set up external LEDs */
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_2__GPIO_1_2));
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_5__GPIO_1_5));
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_7__GPIO_1_7));
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_8__GPIO_1_8));
-	gpio_direction_output(EXT_LED0, 1);
-	gpio_direction_output(EXT_LED1, 1);
-	gpio_direction_output(EXT_LED2, 0);
-	gpio_direction_output(EXT_LED3, 0);
+	gpio_direction_output(EXT_LED0, 0);
 
 	/* do these now so the LCD blanks as early as possible */
 #ifdef CONFIG_MX6DL_UIB_REV_1
@@ -1965,10 +1956,6 @@ int board_late_init(void)
 	if (ret)
 		return -1;
 #endif
-
-	gpio_set_value(EXT_LED1, 0);
-	gpio_set_value(EXT_LED2, 0);
-	gpio_set_value(EXT_LED3, 0);
 
 #ifdef CONFIG_MX6DL_UIB_REV_1
 	/* PWM speaker test */
