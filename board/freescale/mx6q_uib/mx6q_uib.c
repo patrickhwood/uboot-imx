@@ -101,13 +101,16 @@ static enum boot_device boot_dev;
  #define USB_H1_POWER IMX_GPIO_NR(1, 29)
  #define LCD_CNTRL_VGH IMX_GPIO_NR(2, 10)
 #else
- #define LCD_PWR_EN IMX_GPIO_NR(3, 20)
+ #define LCD_PWR_INH IMX_GPIO_NR(3, 20)
  #define LCD_STBYB IMX_GPIO_NR(3, 25)
  #define LCD_RESET IMX_GPIO_NR(3, 27)
  #define RECOVERY_BOOT_LATCH IMX_GPIO_NR(3, 16)
 #endif
 
 #define EXT_LED0 IMX_GPIO_NR(1, 2)
+
+#define S3_PWR_MODE IMX_GPIO_NR(4, 14)
+static int board_version = 1;
 
 extern int sata_curr_device;
 
@@ -1826,6 +1829,8 @@ int board_init(void)
 * when POR or reboot or power on Otherwise system
 *could not be power off anymore*/
 	u32 reg;
+	u32 s3_state;
+
 	writel(0x41736166, SNVS_BASE_ADDR + 0x64);/*set LPPGDR*/
 	udelay(10);
 	reg = readl(SNVS_BASE_ADDR + 0x4c);
@@ -1847,7 +1852,18 @@ int board_init(void)
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D20__GPIO_3_20));
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D25__GPIO_3_25));
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D27__GPIO_3_27));
-	gpio_direction_output(LCD_PWR_EN, 1);
+
+	/* detect board version by toggling S3 via LED0 */
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_KEY_COL4__GPIO_4_14));
+	udelay(1000);
+	s3_state = gpio_get_value(S3_PWR_MODE);
+	gpio_set_value(EXT_LED0, 1);
+	udelay(1000);
+	if (s3_state != gpio_get_value(S3_PWR_MODE))
+		board_version = 2;
+	gpio_set_value(EXT_LED0, 0);
+
+	gpio_direction_output(LCD_PWR_INH, board_version == 1 ? 1 : 0);
 	gpio_direction_output(LCD_STBYB, 1);
 	/* toggle LCD RESET line */
 	gpio_direction_output(LCD_RESET, 0);
@@ -1929,6 +1945,9 @@ int board_late_init(void)
 	uint soc_sbmr2 = readl(SRC_BASE_ADDR + 0x1C);
 
 	printf("boot mode: %d\n", (soc_sbmr2 >> 24) & 3);
+	printf("board version: %d\n", board_version);
+
+	setenv("board_version", board_version == 1 ? "1" : "2");
 
 	switch (get_boot_device()) {
 	case SD_BOOT:
