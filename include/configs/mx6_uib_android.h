@@ -25,6 +25,9 @@
 #include <asm/arch/mx6.h>
 #include "mx6dl_sabresd.h"
 
+#undef CONFIG_SYS_MAXARGS
+#define CONFIG_SYS_MAXARGS 32
+
 #define CONFIG_MX6DL_UIB
 #define CONFIG_MX6DL_UIB_REV_2
 
