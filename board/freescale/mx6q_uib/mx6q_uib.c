@@ -110,7 +110,7 @@ static enum boot_device boot_dev;
 #define EXT_LED0 IMX_GPIO_NR(1, 2)
 
 #define S3_PWR_MODE IMX_GPIO_NR(4, 14)
-static int board_version = 1;
+static int board_version = 2;
 
 extern int sata_curr_device;
 
@@ -1839,10 +1839,6 @@ int board_init(void)
 
 	mxc_iomux_v3_init((void *)IOMUXC_BASE_ADDR);
 
-	/* set up external LEDs */
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_2__GPIO_1_2));
-	gpio_direction_output(EXT_LED0, 0);
-
 	/* do these now so the LCD blanks as early as possible */
 #ifdef CONFIG_MX6DL_UIB_REV_1
 	/* LVDS CNTRL_VGH */
@@ -1853,14 +1849,21 @@ int board_init(void)
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D25__GPIO_3_25));
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_EIM_D27__GPIO_3_27));
 
+	/* set up external LEDs */
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_2__GPIO_1_2));
+	gpio_direction_output(EXT_LED0, 0);
+
 	/* detect board version by toggling S3 via LED0 */
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_KEY_COL4__GPIO_4_14));
 	udelay(1000);
 	s3_state = gpio_get_value(S3_PWR_MODE);
 	gpio_set_value(EXT_LED0, 1);
 	udelay(1000);
-	if (s3_state != gpio_get_value(S3_PWR_MODE))
-		board_version = 2;
+
+	// default board version is 2, so only set version to 1 if
+	// fiery is not suspended *and* we can't toggle S3 via LED0
+	if (s3_state == 0 && gpio_get_value(S3_PWR_MODE) == 0)
+		board_version = 1;
 	gpio_set_value(EXT_LED0, 0);
 
 	gpio_direction_output(LCD_PWR_INH, board_version == 1 ? 1 : 0);
