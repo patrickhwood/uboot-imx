@@ -166,7 +166,7 @@
 #undef CONFIG_EXTRA_ENV_SETTINGS
 #undef CONFIG_BOOTDELAY
 
-#define CONFIG_BOOTDELAY 1
+#define CONFIG_BOOTDELAY 0
 #define CONFIG_LOADADDR		0x10800000	/* loadaddr env var */
 #define CONFIG_RD_LOADADDR      0x11000000
 
@@ -180,10 +180,10 @@
 		"androidboot.hardware=freescale androidboot.serialno=0a01234567890abc\0" \
 		"bootcmd_sd=mmc dev 1;"												\
 		"setenv bootargs ${bootargs} androidboot.rootdevice=sd; " 			\
-		"booti mmc1 ${recovery}\0"											\
+		"fastboot\0"														\
 		"bootcmd_emmc=mmc dev 0;"											\
 		"setenv bootargs ${bootargs} androidboot.rootdevice=emmc; " 		\
-		"booti mmc0 ${recovery}\0"											\
+		"fastboot\0"														\
 		"bootcmd=setenv recovery; run bootuib\0"							\
 		"bootuib=run bootargs_base; "										\
 		"if test ${bootdev} = mmc1; "										\
