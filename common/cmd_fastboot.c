@@ -116,7 +116,7 @@ static unsigned int upload_error;
 
 static fastboot_ptentry ptable[MAX_PTN];
 static unsigned int pcount;
-static int static_pcount = -1;
+static int static_pcount = 0;
 
 #ifdef CONFIG_FASTBOOT_STORAGE_NAND
 static void set_env(char *var, char *val)
