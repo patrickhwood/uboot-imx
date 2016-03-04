@@ -1868,10 +1868,18 @@ int board_init(void)
 
 	gpio_direction_output(LCD_PWR_INH, board_version == 1 ? 1 : 0);
 	gpio_direction_output(LCD_STBYB, 1);
+
+	// delay for 36 msec at POR per Ilitek spec
+	udelay(36000);
+
+	// delay for 8 frames per Ilitek spec (~16.67ms/frame @60fps)
+	udelay(135000);
+
 	/* toggle LCD RESET line */
-	gpio_direction_output(LCD_RESET, 0);
-	udelay(1000);
-	gpio_set_value(LCD_RESET, 1);
+	// LCD should not require manual reset after POR
+	// gpio_direction_output(LCD_RESET, 0);
+	// udelay(1000);
+	// gpio_set_value(LCD_RESET, 1);
 
 	/* clear recovery boot latch */
 	mxc_iomux_v3_setup_pad(MX6DL_PAD_EIM_D16__GPIO_3_16);
