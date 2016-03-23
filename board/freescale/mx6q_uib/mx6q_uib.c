@@ -149,8 +149,9 @@ extern int ipuv3_fb_init(struct fb_videomode *mode, int di,
 
 # define LVDS_CLK 51200000
 static struct fb_videomode lvds_xga = {
-	 "WSVGA", 60, 1024, 600, 19531, 100, 100, 10, 10, 120, 15,
-	 FB_SYNC_EXT,
+	//        Refresh  Xres Yres  10e12/clk LM   RM   TM  BM  HSync VSync
+	 "WSVGA", 60,      1024, 600, 19531,    80,  80,  6,  6,  160,  23,
+	 FB_SYNC_EXT | FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
 	 FB_VMODE_NONINTERLACED,
 	 0,
 };
@@ -772,7 +773,7 @@ static int setup_pmic_voltages(void)
 
 	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
 	if (!i2c_probe(LTC3676_I2C_ADDR)) {
-		printf("Found LCT3676");
+		printf("Found LTC3676");
 #if 0
 		for (i = 1; i <= 0x17; i++) {
 			if (i2c_read(LTC3676_I2C_ADDR, i, 1, &reg[i], 1)) {
@@ -870,6 +871,10 @@ static int setup_pmic_voltages(void)
 		}
 		printf("\n");
 #endif
+	}
+	else {
+		printf("LTC3676 not found!\n");
+		return -1;
 	}
 	return 0;
 }
@@ -1806,6 +1811,9 @@ void setup_splash_image(void)
 	char *s;
 	ulong addr;
 
+	// delay for 8 frames per Ilitek spec (~16.67ms/frame @60fps)
+	udelay(135000);
+
 	s = getenv("splashimage");
 
 	if (s != NULL) {
@@ -1872,14 +1880,17 @@ int board_init(void)
 	// delay for 36 msec at POR per Ilitek spec
 	udelay(36000);
 
-	// delay for 8 frames per Ilitek spec (~16.67ms/frame @60fps)
-	udelay(135000);
-
 	/* toggle LCD RESET line */
-	// LCD should not require manual reset after POR
-	// gpio_direction_output(LCD_RESET, 0);
-	// udelay(1000);
-	// gpio_set_value(LCD_RESET, 1);
+	// force manual reset in case we enter uboot from some place other than POR
+	printf("reset Ilitek LCD panel\n");
+	gpio_direction_output(LCD_RESET, 0);
+	udelay(1000);
+	gpio_set_value(LCD_RESET, 1);
+
+	// delay for 36 msec for soft reset
+	// actual time for reset not specified in Ilitek spec
+	// use POR max delay instead
+	udelay(36000);
 
 	/* clear recovery boot latch */
 	mxc_iomux_v3_setup_pad(MX6DL_PAD_EIM_D16__GPIO_3_16);

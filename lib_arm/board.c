@@ -404,11 +404,11 @@ void start_armboot (void)
 	/* IP Address */
 	gd->bd->bi_ip_addr = getenv_IPaddr ("ipaddr");
 
+	stdio_init ();	/* get the devices list going. */
+
 #if defined CONFIG_SPLASH_SCREEN && defined CONFIG_VIDEO_MX5
 	setup_splash_image();
 #endif
-
-	stdio_init ();	/* get the devices list going. */
 
 	jumptable_init ();
 
