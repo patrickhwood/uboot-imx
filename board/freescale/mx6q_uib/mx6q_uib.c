@@ -1596,11 +1596,6 @@ void lcd_enable(void)
 		PAD_CTL_PUS_100K_UP | PAD_CTL_HYS));
 	gpio_direction_input(LVDS0_AVDD_PG_N);
 
-	/* PWM backlight */
-	imx_pwm_config(pwm1, 50000, 50000);
-	imx_pwm_enable(pwm1);
-	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_9__PWM1_PWMO));
-
 	/* LVDS enable */
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_17__GPIO_7_12));
 	gpio_direction_output(LVDS0_LED_EN, 1);
@@ -1792,6 +1787,13 @@ void lcd_enable(void)
 		writel(0x48C, IOMUXC_BASE_ADDR + 0x8);
 	else
 		writel(0x221, IOMUXC_BASE_ADDR + 0x8);
+
+	// delay for 8 frames per Ilitek spec (~16.67ms/frame @60fps)
+	udelay(135000);
+
+	// turn on backlight after LVDS is set up
+	imx_pwm_config(pwm1, 50000, 50000);
+	imx_pwm_enable(pwm1);
 }
 #endif
 
@@ -1810,9 +1812,6 @@ void setup_splash_image(void)
 {
 	char *s;
 	ulong addr;
-
-	// delay for 8 frames per Ilitek spec (~16.67ms/frame @60fps)
-	udelay(135000);
 
 	s = getenv("splashimage");
 
@@ -1848,6 +1847,12 @@ int board_init(void)
 	mxc_iomux_v3_init((void *)IOMUXC_BASE_ADDR);
 
 	/* do these now so the LCD blanks as early as possible */
+
+	/* PWM backlight */
+	imx_pwm_config(pwm1, 0, 50000);
+	imx_pwm_disable(pwm1);
+	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_GPIO_9__PWM1_PWMO));
+
 #ifdef CONFIG_MX6DL_UIB_REV_1
 	/* LVDS CNTRL_VGH */
 	mxc_iomux_v3_setup_pad(MX6X_IOMUX(PAD_SD4_DAT2__GPIO_2_10));
@@ -1868,29 +1873,22 @@ int board_init(void)
 	gpio_set_value(EXT_LED0, 1);
 	udelay(1000);
 
+	gpio_direction_output(LCD_PWR_INH, board_version == 1 ? 0 : 1);
+	gpio_direction_output(LCD_STBYB, 0);
+	udelay(100000);
+	gpio_set_value(LCD_PWR_INH, board_version == 1 ? 1 : 0);
+	gpio_set_value(LCD_STBYB, 1);
+
+	// delay for 36 msec at POR per Ilitek spec (try 50 -- udelay isn't that accurate)
+	udelay(50000);
+
+	gpio_direction_output(LCD_RESET, 1);
+
 	// default board version is 2, so only set version to 1 if
 	// fiery is not suspended *and* we can't toggle S3 via LED0
 	if (s3_state == 0 && gpio_get_value(S3_PWR_MODE) == 0)
 		board_version = 1;
 	gpio_set_value(EXT_LED0, 0);
-
-	gpio_direction_output(LCD_PWR_INH, board_version == 1 ? 1 : 0);
-	gpio_direction_output(LCD_STBYB, 1);
-
-	// delay for 36 msec at POR per Ilitek spec
-	udelay(36000);
-
-	/* toggle LCD RESET line */
-	// force manual reset in case we enter uboot from some place other than POR
-	printf("reset Ilitek LCD panel\n");
-	gpio_direction_output(LCD_RESET, 0);
-	udelay(1000);
-	gpio_set_value(LCD_RESET, 1);
-
-	// delay for 36 msec for soft reset
-	// actual time for reset not specified in Ilitek spec
-	// use POR max delay instead
-	udelay(36000);
 
 	/* clear recovery boot latch */
 	mxc_iomux_v3_setup_pad(MX6DL_PAD_EIM_D16__GPIO_3_16);
