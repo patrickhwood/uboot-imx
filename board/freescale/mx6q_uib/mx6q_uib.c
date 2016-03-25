@@ -1699,21 +1699,36 @@ void lcd_enable(void)
 	 * pll3_pfd_540M(540M)->ipu1_clk(270M)
 	 */
 	/* pll3_usb_otg_main_clk */
-	/* divider */
+	// 0x02000000+0x80000+0x48000+18 == 0x020C8018
+	// CCM_ANALOG_PLL_USB1_CLR RM 887
+	// clear divider (note: this is POR default)
+	// DIV_SELECT == 0 says freq out == 24M * 20 == 480M
+	// this clock should always be 480M
 	writel(0x3, ANATOP_BASE_ADDR + 0x18);
 
 	/* pll3_pfd_540M */
 	/* divider */
+	// 0x020C80F8
+	// CCM_ANALOG_PFD_480_CLR RM 907
+	// clear PLL_PFD1 fractional divide value
 	writel(0x3F << 8, ANATOP_BASE_ADDR + 0xF8);
+	// 0x020C80F4
+	// CCM_ANALOG_PFD_480_SET RM 907
+	// set PLL_PFD1 fractional divide value to 16
+	// clock = 480*18/16 == 540
 	writel(0x10 << 8, ANATOP_BASE_ADDR + 0xF4);
-	/* enable */
+	// 0x020C80F8
+	/* enable clock gate */
 	writel(0x1 << 15, ANATOP_BASE_ADDR + 0xF8);
 
 	/* ipu1_clk */
+	// 0x02000000+0x80000+0x44000+0x3C == 0x020C403C
+	// RM 852
 	reg = readl(CCM_BASE_ADDR + CLKCTL_CSCDR3);
-	/* source */
+	/* set source for ipu1_hsp clock to PLL3_PFD1 */
 	reg |= (0x3 << 9);
-	/* divider */
+
+	/* set divider to divide by 2 (270M) */
 	reg &= ~(0x7 << 11);
 	reg |= (0x1 << 11);
 	writel(reg, CCM_BASE_ADDR + CLKCTL_CSCDR3);
@@ -1721,49 +1736,81 @@ void lcd_enable(void)
 	/*
 	 * ipu1_pixel_clk_x clock tree:
 	 * osc_clk(24M)->pll2_528_bus_main_clk(528M)->
-	 * pll2_pfd_352M(452.57M)->ldb_dix_clk(64.65M)->
+	 * pll2_pfd0(452.57M)->ldb_dix_clk(64.65M)->
 	 * ipu1_di_clk_x(64.65M)->ipu1_pixel_clk_x(64.65M)
 	 */
 	/* pll2_528_bus_main_clk */
-	/* divider */
+	// 0x02000000+0x80000+0x48000+34 == 0x020C8034
+	// CCM_ANALOG_PLL_SYS_SET RM 891
+	// DIV_SELECT == 1 says freq out == 24M * 22 == 528M
+	// this clock should always be 528M
 	writel(0x1, ANATOP_BASE_ADDR + 0x34);
 
-	/* pll2_pfd_352M */
-	/* disable */
+	// 0x020C8104
+	// CCM_ANALOG_PFD_528_SET RM 909
+	// Gate clock (disable)
 	writel(0x1 << 7, ANATOP_BASE_ADDR + 0x104);
-	/* divider */
+
+	// 0x020C8108
+	// CCM_ANALOG_PFD_528_CLR RM 909
+	// clear PFD_528_PFD0 fractional divide value
 	writel(0x3F, ANATOP_BASE_ADDR + 0x108);
+
+	// 0x020C8104
+	// set PFD_528_PFD0 fractional divide value to 21
+	// clock = 528*18/21 == 452.5714M
 	writel(0x15, ANATOP_BASE_ADDR + 0x104);
 
 	/* ldb_dix_clk */
 	/* source */
+	// 0x02000000+0x80000+0x44000+0x2C == 0x020C402C
+	// CCM_CS2CDR (SSI2 and LDB clock divider) RM 844
 	reg = readl(CCM_BASE_ADDR + CLKCTL_CS2CDR);
+	// clear ldb_di1_clk_sel and ldb_di0_clk_sel
 	reg &= ~(0x3F << 9);
+
+	// set ldb_di1_clk_sel and ldb_di0_clk_sel to
+	// derive clock from PLL2_PFD0
 	reg |= (0x9 << 9);
 	writel(reg, CCM_BASE_ADDR + CLKCTL_CS2CDR);
+
 	/* divider */
+	// 0x02000000+0x80000+0x44000+0x20 == 0x020C4020
+	// CCM Serial Clock Multiplexer RM 838
+	// set db_di1_ipu_div and db_di0_ipu_div to
+	// divide PLL2_PFD0 (452.5714M) by 7 == 64.65M
 	reg = readl(CCM_BASE_ADDR + CLKCTL_CSCMR2);
 	reg |= (0x3 << 10);
 	writel(reg, CCM_BASE_ADDR + CLKCTL_CSCMR2);
 
-	/* pll2_pfd_352M */
+	/* pll2_pfd0 */
 	/* enable after ldb_dix_clk source is set */
+	// CCM_ANALOG_PFD_528_CLR RM 909
+	// 0x020C8108
 	writel(0x1 << 7, ANATOP_BASE_ADDR + 0x108);
 
-	/* ipu1_di_clk_x */
-	/* source */
+	/* ipu1_dix_clk_sel */
+	// 0x02000000+0x80000+0x44000+0x34 == 0x020C4034
+	// CCM HSC Clock Divider RM 848
+	// clear clk sel for di0 and di1
 	reg = readl(CCM_BASE_ADDR + CLKCTL_CHSCCDR);
 	reg &= ~0xE07;
+
+	// set clk sel for di1 to 100 == ldb_di1_clk
+	// set clk sel for di0 to 100 == ldb_di0_clk
 	reg |= 0x803;
 	writel(reg, CCM_BASE_ADDR + CLKCTL_CHSCCDR);
 #endif	/* CONFIG_MX6DL */
 
 	/* Enable ipu1/ipu1_dix/ldb_dix clocks. */
 	if (di == 1) {
+		// 0x02000000+0x80000+0x44000+0x74 == 0x020C4074
+		// RM 875
 		reg = readl(CCM_BASE_ADDR + CLKCTL_CCGR3);
 		reg |= 0xC033;
 		writel(reg, CCM_BASE_ADDR + CLKCTL_CCGR3);
 	} else {
+		// 0x02000000+0x80000+0x44000+0x74 == 0x020C4074
 		reg = readl(CCM_BASE_ADDR + CLKCTL_CCGR3);
 		reg |= 0x300F;
 		writel(reg, CCM_BASE_ADDR + CLKCTL_CCGR3);
@@ -1778,14 +1825,33 @@ void lcd_enable(void)
 	 * LVDS0 mux to IPU1 DI0.
 	 * LVDS1 mux to IPU1 DI1.
 	 */
+	// 0x02000000+0x80000+0x60000+0xC == 0x020E000C
+	// LVDSx_MUX_CTL RM 2051
+	// clear LVDSx_MUX_CTL
 	reg = readl(IOMUXC_BASE_ADDR + 0xC);
 	reg &= ~(0x000003C0);
+	// set LVDS1_MUX_CTL to IPU1 DI1
+	// set LVDS0_MUX_CTL to IPU1 DI0
 	reg |= 0x00000100;
 	writel(reg, IOMUXC_BASE_ADDR + 0xC);
 
+	// 0x020E0008
+	// LVDS settings RM 2049
 	if (di == 1)
+		// DI1_VS_POLARITY = 1 (active low)
+		// BIT_MAPPING_CH1 = SPWG
+		// DATA_WIDTH_CH1 = 24 bits
+		// split mode disabled
+		// CH1_MODE = Channel 1 enabled, routed to DI1
+		// CH0_MODE = Channel 0 disabled
 		writel(0x48C, IOMUXC_BASE_ADDR + 0x8);
 	else
+		// DI0_VS_POLARITY = 1 (active low)
+		// BIT_MAPPING_CH0 = SPWG
+		// DATA_WIDTH_CH0 = 24 bits
+		// split mode disabled
+		// CH1_MODE = Channel 1 disabled
+		// CH0_MODE = Channel 0 enabled, routed to DI0
 		writel(0x221, IOMUXC_BASE_ADDR + 0x8);
 
 	// delay for 8 frames per Ilitek spec (~16.67ms/frame @60fps)
