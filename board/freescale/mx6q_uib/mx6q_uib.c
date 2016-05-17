@@ -1121,6 +1121,7 @@ iomux_v3_cfg_t usdhc2_pads[] = {
 iomux_v3_cfg_t usdhc3_pads[] = {
 	MX6DL_PAD_SD3_CLK__USDHC3_CLK,
 	MX6DL_PAD_SD3_CMD__USDHC3_CMD,
+	MX6DL_PAD_SD3_RST__USDHC3_RST,
 	MX6DL_PAD_SD3_DAT0__USDHC3_DAT0,
 	MX6DL_PAD_SD3_DAT1__USDHC3_DAT1,
 	MX6DL_PAD_SD3_DAT2__USDHC3_DAT2,
@@ -1134,16 +1135,16 @@ iomux_v3_cfg_t usdhc3_pads[] = {
 #endif
 
 #define USDHC_PAD_CTRL_DEFAULT (PAD_CTL_PKE | PAD_CTL_PUE |		\
-		PAD_CTL_PUS_47K_UP  | PAD_CTL_SPEED_LOW |		\
-		PAD_CTL_DSE_80ohm   | PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
+		PAD_CTL_PUS_22K_UP  | PAD_CTL_SPEED_LOW |		\
+		PAD_CTL_DSE_48ohm   | PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
 
 #define USDHC_PAD_CTRL_100MHZ (PAD_CTL_PKE | PAD_CTL_PUE |	\
-		PAD_CTL_PUS_47K_UP  | PAD_CTL_SPEED_MED |		\
-		PAD_CTL_DSE_40ohm   | PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
+		PAD_CTL_PUS_22K_UP  | PAD_CTL_SPEED_MED |		\
+		PAD_CTL_DSE_48ohm   | PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
 
 #define USDHC_PAD_CTRL_200MHZ (PAD_CTL_PKE | PAD_CTL_PUE |	\
-		PAD_CTL_PUS_47K_UP  | PAD_CTL_SPEED_HIGH |		\
-		PAD_CTL_DSE_40ohm   | PAD_CTL_SRE_FAST   | PAD_CTL_HYS)
+		PAD_CTL_PUS_22K_UP  | PAD_CTL_SPEED_HIGH |		\
+		PAD_CTL_DSE_48ohm   | PAD_CTL_SRE_FAST   | PAD_CTL_HYS)
 
 int usdhc_gpio_init(bd_t *bis)
 {
@@ -1208,6 +1209,8 @@ int board_mmc_io_switch(u32 index, u32 clock)
 		pad_ctrl = USDHC_PAD_CTRL_200MHZ;
 	else if (clock == 100000000)
 		pad_ctrl = USDHC_PAD_CTRL_100MHZ;
+	else
+		pad_ctrl = USDHC_PAD_CTRL_DEFAULT;
 
 	switch (index) {
 	case 0:
@@ -1566,7 +1569,10 @@ void  epdc_power_off()
 #ifdef CONFIG_GET_DDR_TARGET_DELAY
 u32 get_ddr_delay(struct fsl_esdhc_cfg *cfg)
 {
-	/* No delay required on SABRESD board SD ports */
+	/* No delay required for Glance eMMC port */
+	if (cfg->esdhc_base == USDHC3_BASE_ADDR)
+		return 0;
+	/* No delay required for uSD cards */
 	return 0;
 }
 #endif
@@ -2046,6 +2052,10 @@ int board_late_init(void)
 			puts("SD card init failed; fail over to eMMC\n");
 		}
 	case MMC_BOOT:
+		// reinitialize eMMC device with new pad setup in usdhc3_pads[]
+		mmc = find_mmc_device(0);
+		mmc->has_init = 0;
+		mmc_init(mmc);
 		setenv("fastboot_dev", "mmc0");
 		setenv("bootdev", "mmc0");
 		break;

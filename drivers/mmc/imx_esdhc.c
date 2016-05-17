@@ -464,7 +464,7 @@ static void esdhc_dll_setup(struct mmc *mmc)
 	struct fsl_esdhc_cfg *cfg = (struct fsl_esdhc_cfg *)mmc->priv;
 	struct fsl_esdhc *regs = (struct fsl_esdhc *)cfg->esdhc_base;
 	uint dll_control;
-	u32 target_delay = ESDHC_DLL_TARGET_DEFAULT_VAL;
+	u32 target_delay = 0;
 
 /* For DDR mode operation, provide target delay parameter for each SD port.
  * Use cfg->esdhc_base to distinguish the SD port #. The delay for each port
@@ -493,6 +493,14 @@ static void esdhc_dll_setup(struct mmc *mmc)
 		if (cfg->is_usdhc && mmc->clock <= 25000000)
 			return;
 
+		/*
+		  The delay specified in the DLL control register is off by 1,
+		  where a value of 0 means 1 unit of delay. To get an actual delay
+		  of 0, DLL must be disabled.
+		*/
+		if (!target_delay)
+			return;
+
 		/* Disable auto clock gating for PERCLK, HCLK, and IPGCLK */
 		writel(readl(&regs->sysctl) | 0x7, &regs->sysctl);
 		/* Stop SDCLK while delay line is calibrated */
@@ -512,11 +520,16 @@ static void esdhc_dll_setup(struct mmc *mmc)
 		writel(dll_control, &regs->dllctrl);
 
 		/* Set target delay */
+		/*
+		  The delay specified in the DLL control register is off by 1,
+		  where a value of 0 means 1 unit delay. So to get the actual
+		  delay of target_delay we have to subtract 1.
+		*/
 		if (cfg->is_usdhc) {
 			dll_control &= ~USDHC_DLLCTRL_TARGET_MASK;
-			dll_control |= (((target_delay & USDHC_DLL_LOW_MASK) <<
+			dll_control |= ((((target_delay-1) & USDHC_DLL_LOW_MASK) <<
 				USDHC_DLLCTRL_TARGET_LOW_SHIFT) |
-				((target_delay >> USDHC_DLL_HIGH_SHIFT) <<
+				(((target_delay-1) >> USDHC_DLL_HIGH_SHIFT) <<
 				USDHC_DLLCTRL_TARGET_HIGH_SHIFT));
 			writel(dll_control, &regs->dllctrl);
 		} else {
