@@ -1945,6 +1945,12 @@ int board_init(void)
 	gpio_set_value(EXT_LED0, 1);
 	udelay(1000);
 
+	// default board version is 2, so only set version to 1 if
+	// fiery is not suspended *and* we can't toggle S3 via LED0
+	if (s3_state == 0 && gpio_get_value(S3_PWR_MODE) == 0)
+		board_version = 1;
+	gpio_set_value(EXT_LED0, 0);
+
 	gpio_direction_output(LCD_PWR_INH, board_version == 1 ? 0 : 1);
 	gpio_direction_output(LCD_STBYB, 0);
 	udelay(100000);
@@ -1955,12 +1961,6 @@ int board_init(void)
 	udelay(50000);
 
 	gpio_direction_output(LCD_RESET, 1);
-
-	// default board version is 2, so only set version to 1 if
-	// fiery is not suspended *and* we can't toggle S3 via LED0
-	if (s3_state == 0 && gpio_get_value(S3_PWR_MODE) == 0)
-		board_version = 1;
-	gpio_set_value(EXT_LED0, 0);
 
 	/* clear recovery boot latch */
 	mxc_iomux_v3_setup_pad(MX6DL_PAD_EIM_D16__GPIO_3_16);
